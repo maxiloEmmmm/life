@@ -35,9 +35,9 @@ class Item extends StatelessWidget {
                     Expanded(
                         flex: 8,
                         child: Container(
-                          padding: EdgeInsets.only(left: 8),
+                          padding: EdgeInsets.only(left: 4),
                           child: Text("今天是个好日子"),
-                          foregroundDecoration: BoxDecoration(
+                          decoration: BoxDecoration(
                               border: Border(
                                   left: BorderSide(
                                       color: Colors.orange, width: 4))),
