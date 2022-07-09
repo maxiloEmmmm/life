@@ -6,9 +6,14 @@ class Item extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 24),
-      color: Colors.white,
+      margin: const EdgeInsets.only(top: 34),
       height: 200,
+      decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
+        BoxShadow(
+            color: Colors.grey.shade200,
+            offset: const Offset(0.0, 5.0),
+            blurRadius: 6.0),
+      ]),
       child: Column(
         children: [
           Expanded(
@@ -27,7 +32,16 @@ class Item extends StatelessWidget {
                     )),
                 Row(
                   children: [
-                    Expanded(flex: 8, child: Text("今天是个好日子")),
+                    Expanded(
+                        flex: 8,
+                        child: Container(
+                          padding: EdgeInsets.only(left: 8),
+                          child: Text("今天是个好日子"),
+                          foregroundDecoration: BoxDecoration(
+                              border: Border(
+                                  left: BorderSide(
+                                      color: Colors.orange, width: 4))),
+                        )),
                     Expanded(flex: 2, child: Text("01/24")),
                   ],
                 )

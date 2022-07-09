@@ -12,7 +12,7 @@ class Demo extends StatelessWidget {
       ),
       body: Container(
         padding: EdgeInsets.fromLTRB(8, 4, 8, 8),
-        color: Colors.grey[300],
+        color: Colors.grey[150],
         child: ListView(children: [
           Item(),
           Item(),
