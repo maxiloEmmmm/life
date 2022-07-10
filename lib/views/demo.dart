@@ -25,6 +25,14 @@ class _DemoState extends State<Demo> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ngrok'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.add_box),
+            onPressed: () {
+              Navigator.pushNamed(context, "/ngrok/add");
+            },
+          )
+        ],
       ),
       body: Container(
         padding: EdgeInsets.fromLTRB(8, 4, 8, 8),
