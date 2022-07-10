@@ -1,26 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:focus/pkg/fetch/ngrok.dart';
 import './item.dart';
 
-class Demo extends StatelessWidget {
+class Demo extends StatefulWidget {
   const Demo({Key? key}) : super(key: key);
+
+  @override
+  State<Demo> createState() => _DemoState();
+}
+
+class _DemoState extends State<Demo> {
+  List<NgrokAgent> ngl = [];
+
+  _DemoState() {
+    Ngrok("2Bk4TjVjGYgW443S5vCbcdGlrWN_5dqQ3WV4GF6wkkBuaXM9y")
+        .agent()
+        .then((value) => this.setState(() {
+              ngl = value;
+            }));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BottomNavigationBar Sample'),
+        title: const Text('Ngrok'),
       ),
       body: Container(
         padding: EdgeInsets.fromLTRB(8, 4, 8, 8),
         color: Colors.grey[150],
-        child: ListView(children: [
-          Item(),
-          Item(),
-          Item(),
-          Item(),
-          Item(),
-          Item(),
-        ]),
+        child: ListView(children: ngl.map((e) => Item(e)).toList()),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[

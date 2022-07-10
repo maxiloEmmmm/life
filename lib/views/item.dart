@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:focus/pkg/fetch/ngrok.dart';
+import 'package:sprintf/sprintf.dart';
 
 class Item extends StatelessWidget {
-  const Item({Key? key}) : super(key: key);
+  NgrokAgent? ng;
+  Item(this.ng);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 34),
-      height: 200,
       decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
         BoxShadow(
             color: Colors.grey.shade200,
@@ -16,8 +18,7 @@ class Item extends StatelessWidget {
       ]),
       child: Column(
         children: [
-          Expanded(
-            flex: 2,
+          Container(
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -36,7 +37,7 @@ class Item extends StatelessWidget {
                         flex: 8,
                         child: Container(
                           padding: EdgeInsets.only(left: 4),
-                          child: Text("今天是个好日子"),
+                          child: Text(sprintf("NO.%s", [ng!.id])),
                           decoration: BoxDecoration(
                               border: Border(
                                   left: BorderSide(
@@ -48,12 +49,19 @@ class Item extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
-              flex: 8,
-              child: Row(
+          Container(
+            padding: EdgeInsets.all(8),
+            child: Row(children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [Text("content")],
-              )),
+                children: [
+                  Text(sprintf("Addr: %s", [ng!.publicUrl])),
+                  Text(sprintf("Nat: %s", [ng!.forwardsTo])),
+                ],
+              )
+            ]),
+          )
         ],
       ),
     );
