@@ -1,3 +1,4 @@
+import 'package:focus/pkg/provider/config.dart';
 import 'package:focus/views/demo_param.dart';
 import 'package:focus/views/ngrok/add.dart' as ngrokAdd;
 import 'package:maxilozoz_box/application.dart';
@@ -12,5 +13,6 @@ void main() {
   MinRoute route = app.make('route');
   route.add('/', () => Demo());
   route.add('/ngrok/add', () => ngrokAdd.Add());
+  app.serviceProvider.register(appConfig());
   app.run();
 }

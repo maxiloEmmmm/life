@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/fetch/ngrok.dart';
+import 'package:sprintf/sprintf.dart';
 import './item.dart';
 
 class Demo extends StatefulWidget {
@@ -10,7 +11,7 @@ class Demo extends StatefulWidget {
 }
 
 class _DemoState extends State<Demo> {
-  List<NgrokAgent> ngl = [];
+  List<ItemFetch> ifs = [];
 
   _DemoState() {
     Ngrok("2Bk4TjVjGYgW443S5vCbcdGlrWN_5dqQ3WV4GF6wkkBuaXM9y")
@@ -58,6 +59,49 @@ class _DemoState extends State<Demo> {
         selectedItemColor: Colors.amber[800],
         onTap: (int index) => {},
       ),
+    );
+  }
+}
+
+class NgrokFetch {
+  String ak = "";
+  String title = "";
+  NgrokFetch(this.title, this.ak);
+  Future<NgrokInfo> fetch() async {
+    return NgrokInfo(this.title, await Ngrok(ak).agent());
+  }
+  String type() {
+    return "Ngrok";
+  }
+}
+
+class NgrokInfo {
+  List<NgrokAgent> agents;
+  String title = "";
+  NgrokInfo(this.title, this.agents);
+
+  String identity() {
+    return title;
+  }
+  Widget child(BuildContext context) {
+    return Row(
+      children: [
+        Column(
+          children: agents.map((e) => Container(
+              child: Row(
+                children: [
+                  Column(
+                    children: [
+                      Container(height: 1, color: Colors.grey.shade100,),
+                      Text(sprintf("Addr: %s", [e.publicUrl])),
+                      Text(sprintf("Local: %s", [e.forwardsTo]))
+                    ],
+                  )
+                ],
+              ),
+            )).toList(),
+        )
+      ],
     );
   }
 }
