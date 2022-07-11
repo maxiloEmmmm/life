@@ -45,6 +45,7 @@ class _AddState extends State<Add> {
                         "identity": identityC.text,
                         "api_key": apiKeyC.text,
                       });
+                      tip.TextAlertDescWithCB(this.context, "成功!", () => Navigator.pop(context));
                     } catch (e) {
                       tip.TextAlertWithOutCB(this.context, "异常!", e.toString());
                     }
