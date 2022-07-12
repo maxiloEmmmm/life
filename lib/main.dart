@@ -1,18 +1,18 @@
 import 'package:focus/pkg/provider/config.dart';
-import 'package:focus/views/demo_param.dart';
-import 'package:focus/views/ngrok/add.dart' as ngrokAdd;
+import 'package:focus/views/ngrok/add.dart' as ngrok_add;
+import 'package:focus/views/plan/plan.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/route/route.dart';
-import 'views/demo.dart';
-import 'views/demo_param.dart';
-import 'views/demo_param2.dart';
+import 'views/ngrok/ngrok.dart';
 
 final Application app = Application();
 
 void main() {
   MinRoute route = app.make('route');
-  route.add('/', () => Demo());
-  route.add('/ngrok/add', () => ngrokAdd.Add());
+  route.add('/', () => const Plan());
+  route.add('/ngrok', () => const Ngrok());
+  route.add('/ngrok/add', () => ngrok_add.Add(""));
+  route.add('/ngrok/update/:id', (Map data) => ngrok_add.Add(data["id"]));
   app.serviceProvider.register(appConfig());
   app.run();
 }

@@ -13,17 +13,12 @@ class Ngrok {
 
   Future<List<NgrokAgent>> agent() async {
     Http http = Application.instance?.make("http");
-
-    try {
-      var resp = await http.get("https://api.ngrok.com/tunnels",
-          options: Options(headers: {
-            'Authorization': sprintf("Bearer %s", [key]),
-            'Ngrok-Version': 2,
-          }));
-      return NgrokAgentList.fromJson(resp.data).tunnels!;
-    } catch (e) {
-      return [];
-    }
+    var resp = await http.get("https://api.ngrok.com/tunnels",
+        options: Options(headers: {
+          'Authorization': sprintf("Bearer %s", [key]),
+          'Ngrok-Version': 2,
+        }));
+    return NgrokAgentList.fromJson(resp.data).tunnels!;
   }
 }
 

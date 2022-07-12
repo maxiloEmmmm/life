@@ -1,12 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:focus/pkg/db_types/ngrok.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/storage/sqlite/sqlite.dart';
 import 'package:sprintf/sprintf.dart';
 
 class Add extends StatefulWidget {
-  const Add({Key? key}) : super(key: key);
+  String identity = "";
+  Add(this.identity);
 
   @override
   State<Add> createState() => _AddState();
@@ -15,36 +17,80 @@ class Add extends StatefulWidget {
 class _AddState extends State<Add> {
   @override
   initState() {
-
+    super.initState();
+    if(widget.identity.isNotEmpty) {
+      fetch();
+    }
   }
+
+  void fetch() {
+    setState(() {
+      _fetch = () async {
+        try {
+          var db = await (await Application.instance!.make("sqlite") as sqlite).DB();
+          var ngrok = await db!.rawQuery("select * from ngrok where identity = ?", [widget.identity]);
+          if(ngrok.isEmpty) {
+            throw "记录不存在!";
+          } 
+          return ngrok[0];
+        }catch(e) {
+          tip.TextAlertDescWithCB(context, sprintf("[%s] %s", [widget.identity, e.toString()]), () {
+            Navigator.pop(context);
+          });
+          return null;
+        }
+      }();
+    });
+  }
+
+  Future<Map?>? _fetch;
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController apiKeyC = TextEditingController();
   TextEditingController identityC = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder<Map?>(
+      future: _fetch,
+      builder: (context, snapshot) {
+        if(snapshot.connectionState == ConnectionState.none || snapshot.hasData) {
+          return view(context, snapshot.data);
+        }else {
+          return const CircularProgressIndicator();
+        }
+      },
+    );
+  }
+  
+  Widget view(BuildContext context, Map? data) {
+    identityC.text = data?["identity"] ?? "";
+    apiKeyC.text = data?["api_key"] ?? "";
     return Scaffold(
         appBar: AppBar(
-          title: const Text('新的ngrok'),
+          title: Text(data == null ? '新的ngrok' : '焕然一新的ngrok'),
           actions: [
             Container(
               width: 60,
               child: CupertinoDialogAction(
                 isDestructiveAction: true,
-                child: Text("Done"),
+                child: const Text("Done"),
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     try {
                       var db = await (await Application.instance!.make("sqlite") as sqlite).DB();
-                      var rows = await db!.rawQuery("select * from ngrok where identity = ? limit 1", [identityC.text]);
-                      if (rows.isNotEmpty) {
-                        tip.TextAlertDesc(this.context, sprintf("%s 已新增", [identityC.text]));
-                        return;
-                      }
+                      if(data == null) {
+                        var rows = await db!.rawQuery("select * from ${NgrokDBMetadata.dbTable} where ${NgrokDBMetadata.identityField} = ? limit 1", [identityC.text]);
+                        if (rows.isNotEmpty) {
+                          tip.TextAlertDesc(this.context, sprintf("%s 已新增", [identityC.text]));
+                          return;
+                        }
 
-                      await db.insert("ngrok", {
-                        "identity": identityC.text,
-                        "api_key": apiKeyC.text,
-                      });
+                        await db.insert(NgrokDBMetadata.dbTable, Ngrok(identity: identityC.text, apiKey: apiKeyC.text).toJson());
+                      }else {
+                        await db!.update(NgrokDBMetadata.dbTable, Ngrok(apiKey: apiKeyC.text).toJson(), where: sprintf("${NgrokDBMetadata.identityField} = %s", [widget.identity]));
+                      }
+                      
                       tip.TextAlertDescWithCB(this.context, "成功!", () => Navigator.pop(context));
                     } catch (e) {
                       tip.TextAlertWithOutCB(this.context, "异常!", e.toString());

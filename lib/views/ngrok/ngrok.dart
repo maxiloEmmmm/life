@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:focus/pkg/fetch/ngrok.dart';
+import 'package:focus/pkg/db_types/ngrok.dart' as ngrok_db;
+import 'package:focus/pkg/fetch/ngrok.dart' as ngrok_sdk;
+import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/storage/sqlite/sqlite.dart';
 import 'package:sprintf/sprintf.dart';
-import './item.dart';
+import 'package:focus/pkg/component/item.dart';
 
-class Demo extends StatefulWidget {
-  const Demo({Key? key}) : super(key: key);
+class Ngrok extends StatefulWidget {
+  const Ngrok({Key? key}) : super(key: key);
 
   @override
-  State<Demo> createState() => _DemoState();
+  State<Ngrok> createState() => _NgrokState();
 }
 
-class _DemoState extends State<Demo> {
+class _NgrokState extends State<Ngrok> {
   List<ItemFetch> ifs = [];
 
   //2Bk4TjVjGYgW443S5vCbcdGlrWN_5dqQ3WV4GF6wkkBuaXM9y
@@ -21,17 +23,28 @@ class _DemoState extends State<Demo> {
   @override
   void initState() {
     super.initState();
-    _fetch = fetch();
+    fetch();
   }
 
-  Future<List<ItemFetch>?> fetch() async {
-    try {
-      var db = await (await Application.instance!.make("sqlite") as sqlite).DB();
-      var ngroks = await db!.rawQuery("select * from ngrok");
-      return ngroks.map((e) => NgrokFetch(e["identity"] as String, e["api_key"] as String)).toList();
-    }catch(e) {
-      return null;
-    }
+  void fetch() {
+    setState(() {
+      _fetch = () async {
+        try {
+          var db = await (await Application.instance!.make("sqlite") as sqlite).DB();
+          var ngroks = await db!.rawQuery("select * from ${ngrok_db.NgrokDBMetadata.dbTable}");
+          return ngroks.map((e) => ngrok_db.Ngrok.fromJson(e)).map((e) => NgrokFetch(
+            e.identity ?? "", e.apiKey ?? "",
+            removeHandle: (identity) async {
+              var res = await db.rawDelete("delete from ${ngrok_db.NgrokDBMetadata.dbTable} where ${ngrok_db.NgrokDBMetadata.identityField} = ?", [identity]) == 1;
+              fetch();
+              return res;
+            },
+          )).toList();
+        }catch(e) {
+          return null;
+        }
+      }();
+    });
   }
 
   Future<List<ItemFetch>?>? _fetch;
@@ -58,7 +71,8 @@ class _DemoState extends State<Demo> {
           IconButton(
             icon: Icon(Icons.add_box),
             onPressed: () {
-              Navigator.pushNamed(context, "/ngrok/add");
+              Navigator.pushNamed(context, "/ngrok/add")
+                .then((value) => fetch());
             },
           )
         ],
@@ -66,7 +80,7 @@ class _DemoState extends State<Demo> {
       body: Container(
         padding: EdgeInsets.fromLTRB(8, 4, 8, 8),
         color: Colors.grey[150],
-        child: ListView(children: ifs!.map((e) => Item(e)).toList()),
+        child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item(e)).toList()),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -94,23 +108,50 @@ class _DemoState extends State<Demo> {
 class NgrokFetch extends ItemFetch {
   String ak = "";
   String title = "";
-  NgrokFetch(this.title, this.ak);
+  Future<bool?> Function(String identity)? removeHandle;
+  NgrokFetch(this.title, this.ak, {this.removeHandle});
 
   @override
   Future<ItemInfo> fetch() async {
-    return NgrokInfo(this.title, await Ngrok(ak).agent());
+    bool error = false;
+    List<ngrok_sdk.NgrokAgent> nas = [];
+    try {
+      nas = await ngrok_sdk.Ngrok(ak).agent();
+    }catch(e) {
+      error = true;
+    }
+    return NgrokInfo(title, nas, error);
   }
 
   @override
   String type() {
     return "Ngrok";
   }
+
+  @override
+  Future remove(BuildContext context, String identity) async {
+    try {
+      if((await removeHandle!(identity))!) {
+        tip.TextAlertDesc(context, "成功");
+        return;
+      }
+      throw "失败";
+    }catch(e) {
+      tip.TextAlertDesc(context, sprintf("[%s] %s", [identity, e.toString()]));
+    }
+  }
+
+  @override
+  Future update(BuildContext context, String identity) async {
+    await Navigator.pushNamed(context, sprintf("/ngrok/update/%s", [identity]));
+  }
 }
 
 class NgrokInfo extends ItemInfo {
-  List<NgrokAgent> agents;
+  List<ngrok_sdk.NgrokAgent> agents;
   String title = "";
-  NgrokInfo(this.title, this.agents);
+  bool error;
+  NgrokInfo(this.title, this.agents, this.error);
 
   @override
   String identity() {
@@ -122,7 +163,9 @@ class NgrokInfo extends ItemInfo {
     return Row(
       children: [
         Column(
-          children: agents.map((e) => Container(
+          children: error ? [
+            const Text("错误了")
+          ] : agents.map((e) => Container(
               child: Row(
                 children: [
                   Column(
