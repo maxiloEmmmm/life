@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:focus/pkg/build/db.dart';
+import "package:maxilozoz_box/modules/storage/sqlite/sqlite.dart";
+import 'package:maxilozoz_box/modules/storage/sqlite/build/db.dart';
 import 'package:focus/pkg/converters/bool_int.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -12,6 +13,7 @@ part 'plan.db.g.dart';
 )
 @DBAnnotation()
 class Plan {
+  @DBPKAnnotation()
   int? id;
 
   String? name;

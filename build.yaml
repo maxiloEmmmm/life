@@ -1,8 +1,0 @@
-builders:
-  dbBuilder:
-    import: "package:focus/pkg/build/build.dart"
-    builder_factories: ["dbBuilder"]
-    build_extensions: {".dart": [".db.g.part"]}
-    auto_apply: root_package
-    build_to: source
-    applies_builders: ["source_gen|combining_builder"]

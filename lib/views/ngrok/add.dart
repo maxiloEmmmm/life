@@ -79,16 +79,17 @@ class _AddState extends State<Add> {
                   if (_formKey.currentState!.validate()) {
                     try {
                       var db = await (await Application.instance!.make("sqlite") as sqlite).DB();
+                      var ngrokClient = NgrokClient(db!);
                       if(data == null) {
-                        var rows = await db!.rawQuery("select * from ${NgrokDBMetadata.dbTable} where ${NgrokDBMetadata.identityField} = ? limit 1", [identityC.text]);
-                        if (rows.isNotEmpty) {
+                        var record = await ngrokClient.first(identityC.text);
+                        if (record != null) {
                           tip.TextAlertDesc(this.context, sprintf("%s 已新增", [identityC.text]));
                           return;
                         }
 
-                        await db.insert(NgrokDBMetadata.dbTable, Ngrok(identity: identityC.text, apiKey: apiKeyC.text).toJson());
+                        await ngrokClient.insert(Ngrok(identity: identityC.text, apiKey: apiKeyC.text));
                       }else {
-                        await db!.update(NgrokDBMetadata.dbTable, Ngrok(apiKey: apiKeyC.text).toJson(), where: sprintf("${NgrokDBMetadata.identityField} = %s", [widget.identity]));
+                        await ngrokClient.update(widget.identity, Ngrok(apiKey: apiKeyC.text));
                       }
                       
                       tip.TextAlertDescWithCB(this.context, "成功!", () => Navigator.pop(context));

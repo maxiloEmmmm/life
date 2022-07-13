@@ -1,6 +1,7 @@
-import 'package:focus/pkg/build/build.dart';
-import 'package:focus/pkg/build/db.dart';
 import 'package:json_annotation/json_annotation.dart';
+
+import "package:maxilozoz_box/modules/storage/sqlite/sqlite.dart";
+import 'package:maxilozoz_box/modules/storage/sqlite/build/db.dart';
 
 part 'ngrok.g.dart';
 part 'ngrok.db.g.dart';
