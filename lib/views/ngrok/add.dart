@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/db_types/ngrok.dart';
+import 'package:focus/pkg/provider/db.dart';
+import 'package:focus/pkg/provider/db_provider.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
-import 'package:maxilozoz_box/modules/storage/sqlite/sqlite.dart';
 import 'package:sprintf/sprintf.dart';
 
 class Add extends StatefulWidget {
@@ -27,12 +28,12 @@ class _AddState extends State<Add> {
     setState(() {
       _fetch = () async {
         try {
-          var db = await (await Application.instance!.make("sqlite") as sqlite).DB();
-          var ngrok = await db!.rawQuery("select * from ngrok where identity = ?", [widget.identity]);
-          if(ngrok.isEmpty) {
+          AppDB appDB = await Application.instance!.make("app_db");
+          var ngrok = await appDB.ngrokClient.first(widget.identity);
+          if(ngrok == null) {
             throw "记录不存在!";
           } 
-          return ngrok[0];
+          return ngrok;
         }catch(e) {
           tip.TextAlertDescWithCB(context, sprintf("[%s] %s", [widget.identity, e.toString()]), () {
             Navigator.pop(context);
@@ -43,7 +44,7 @@ class _AddState extends State<Add> {
     });
   }
 
-  Future<Map?>? _fetch;
+  Future<Ngrok?>? _fetch;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController apiKeyC = TextEditingController();
@@ -51,7 +52,7 @@ class _AddState extends State<Add> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map?>(
+    return FutureBuilder<Ngrok?>(
       future: _fetch,
       builder: (context, snapshot) {
         if(snapshot.connectionState == ConnectionState.none || snapshot.hasData) {
@@ -63,9 +64,9 @@ class _AddState extends State<Add> {
     );
   }
   
-  Widget view(BuildContext context, Map? data) {
-    identityC.text = data?["identity"] ?? "";
-    apiKeyC.text = data?["api_key"] ?? "";
+  Widget view(BuildContext context, Ngrok? data) {
+    identityC.text = data?.identity ?? "";
+    apiKeyC.text = data?.apiKey ?? "";
     return Scaffold(
         appBar: AppBar(
           title: Text(data == null ? '新的ngrok' : '焕然一新的ngrok'),
@@ -78,18 +79,17 @@ class _AddState extends State<Add> {
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     try {
-                      var db = await (await Application.instance!.make("sqlite") as sqlite).DB();
-                      var ngrokClient = NgrokClient(db!);
+                      AppDB appDB = await Application.instance!.make("app_db");
                       if(data == null) {
-                        var record = await ngrokClient.first(identityC.text);
+                        var record = await appDB.ngrokClient.first(identityC.text);
                         if (record != null) {
                           tip.TextAlertDesc(this.context, sprintf("%s 已新增", [identityC.text]));
                           return;
                         }
 
-                        await ngrokClient.insert(Ngrok(identity: identityC.text, apiKey: apiKeyC.text));
+                        await appDB.ngrokClient.insert(Ngrok(identity: identityC.text, apiKey: apiKeyC.text));
                       }else {
-                        await ngrokClient.update(widget.identity, Ngrok(apiKey: apiKeyC.text));
+                        await appDB.ngrokClient.update(widget.identity, Ngrok(apiKey: apiKeyC.text));
                       }
                       
                       tip.TextAlertDescWithCB(this.context, "成功!", () => Navigator.pop(context));

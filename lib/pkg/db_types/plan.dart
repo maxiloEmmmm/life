@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:maxilozoz_box/modules/storage/sqlite/build/annotation.dart';
 import "package:maxilozoz_box/modules/storage/sqlite/sqlite.dart";
-import 'package:maxilozoz_box/modules/storage/sqlite/build/db.dart';
 import 'package:focus/pkg/converters/bool_int.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -37,9 +37,4 @@ class Plan {
     this.relationID,
     this.deadLine
   });
-
-  factory Plan.fromJson(Map<String, dynamic> json) =>
-      _$PlanFromJson(json);
-
-  Map<String, dynamic> toJson() => _$PlanToJson(this);
 }

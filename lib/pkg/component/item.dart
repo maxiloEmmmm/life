@@ -5,19 +5,19 @@ import 'package:sprintf/sprintf.dart';
 
 abstract class ItemFetch {
   Future<ItemInfo> fetch();
-  Future remove(BuildContext context, String identity);
-  Future update(BuildContext context, String identity);
+  String identity();
+  Future remove(BuildContext context);
+  Future update(BuildContext context);
   String type();
 }
 
 abstract class ItemInfo {
-  String identity();
   Widget child(BuildContext context);
 }
 
 class Item extends StatefulWidget {
   ItemFetch ng;
-  Item(this.ng);
+  Item(this.ng):super(key: ValueKey("${ng.type()}_${ng.identity()}"));
 
   @override
   State<Item> createState() => _ItemState();
@@ -49,7 +49,8 @@ class _ItemState extends State<Item> {
               children: [
                 SlidableAction(
                   onPressed: (BuildContext context) {
-                    widget.ng.remove(context, snapshot.data!.identity());
+                    //todo 如果删除后 list页面会删除这个item 此时context无效 会爆炸
+                    widget.ng.remove(context);
                   },
                   backgroundColor: Color(0xFFFE4A49),
                   foregroundColor: Colors.white,
@@ -58,7 +59,7 @@ class _ItemState extends State<Item> {
                 ),
                 SlidableAction(
                   onPressed: (BuildContext context) async {
-                    await widget.ng.update(context, snapshot.data!.identity());
+                    await widget.ng.update(context);
                     fetch();
                   },
                   backgroundColor: Colors.blue.shade200,
@@ -105,7 +106,7 @@ class _ItemState extends State<Item> {
                         flex: 1,
                         child: Container(
                           padding: EdgeInsets.only(left: 4),
-                          child: Text(sprintf("NO.%s", [ii == null ? "-" : ii.identity()])),
+                          child: Text(sprintf("NO.%s", [ii == null ? "-" : widget.ng.identity()])),
                           decoration: const BoxDecoration(
                               border: Border(
                                   left: BorderSide(

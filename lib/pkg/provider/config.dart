@@ -1,3 +1,5 @@
+import 'package:focus/pkg/db_types/ngrok.dart';
+import 'package:focus/pkg/db_types/plan.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/config/config.dart';
 
@@ -10,10 +12,8 @@ class appConfig {
     config.add({
       "db_enable": true,
       "db_schema": '''
-create table ngrok (
-  identity text,
-  api_key text
-)
+${NgrokClient.dbSchema}
+${PlanClient.dbSchema}
 '''
     }, inDev: true);
   }

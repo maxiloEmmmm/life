@@ -7,7 +7,7 @@ part of 'ngrok.dart';
 // **************************************************************************
 
 Ngrok _$NgrokFromJson(Map<String, dynamic> json) => Ngrok(
-      apiKey: json['apiKey'] as String?,
+      apiKey: json['api_key'] as String?,
       identity: json['identity'] as String?,
     );
 
@@ -21,6 +21,6 @@ Map<String, dynamic> _$NgrokToJson(Ngrok instance) {
   }
 
   writeNotNull('identity', instance.identity);
-  writeNotNull('apiKey', instance.apiKey);
+  writeNotNull('api_key', instance.apiKey);
   return val;
 }

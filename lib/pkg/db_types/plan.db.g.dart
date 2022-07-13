@@ -6,64 +6,69 @@
 
 part of 'plan.dart';
 
+class PlanJSONHelp {
+  static Plan fromJson(Map<String, dynamic> json) => _$PlanFromJson(json);
+  static Map<String, dynamic> toJson(Plan obj) => _$PlanToJson(obj);
+}
+
 class PlanClient {
   Database db;
   PlanClient(this.db);
 
   Future<List<Plan>> all() async {
-    return (await db.rawQuery("select * from Plan"))
-        .map((e) => Plan.fromJson(e))
+    return (await db.rawQuery("select * from $dbTable"))
+        .map((e) => PlanJSONHelp.fromJson(e))
         .toList();
   }
 
   Future<int> insert(Plan obj) async {
-    return await db.insert("Plan", obj.toJson());
+    return await db.insert(dbTable, PlanJSONHelp.toJson(obj));
   }
 
   Future<int> updateWhere(
       Plan obj, String? where, List<Object?>? whereArgs) async {
-    return await db.update("Plan", obj.toJson(),
+    return await db.update(dbTable, PlanJSONHelp.toJson(obj),
         where: where, whereArgs: whereArgs);
   }
 
   Future<int> delete(int? id) async {
-    return await db.rawDelete("delete from Plan where id = ?", [id]);
+    return await db.rawDelete("delete from $dbTable where $idField = ?", [id]);
   }
 
   Future<int> update(int? id, Plan obj) async {
-    return await updateWhere(obj, "id = ?", [id]);
+    return await updateWhere(obj, "$idField = ?", [id]);
   }
 
   Future<Plan?> first(int? id) async {
     //ignore more rows
-    var rows =
-        await db.rawQuery("select * from Plan where id = ? limit 1", [id]);
+    var rows = await db
+        .rawQuery("select * from $dbTable where $idField = ? limit 1", [id]);
     if (rows.isEmpty) {
       return null;
     }
 
-    return Plan.fromJson(rows[0]);
+    return PlanJSONHelp.fromJson(rows[0]);
   }
 
-  static var idField = "id";
-  static var nameField = "name";
-  static var descField = "desc";
-  static var repeatField = "repeat";
-  static var enableRepeatField = "enableRepeat";
-  static var deadLineField = "deadLine";
-  static var relationIDField = "relationID";
-  static var enableRelationField = "enableRelation";
-  static var dbTable = "Plan";
-  static var dbSchema = '''
-  create table Plan (
-    id INTEGER;
-    name TEXT;
-    desc TEXT;
-    repeat INTEGER;
-    enableRepeat INTEGER;
-    deadLine INTEGER;
-    relationID INTEGER;
-    enableRelation INTEGER;
+  static const idField = "id";
+  static const nameField = "name";
+  static const descField = "desc";
+  static const repeatField = "repeat";
+  static const enableRepeatField = "enableRepeat";
+  static const deadLineField = "deadLine";
+  static const relationIDField = "relationID";
+  static const enableRelationField = "enableRelation";
+  static const dbTable = "Plan";
+  static const dbSchema = '''
+  create table $dbTable (
+    $idField INTEGER;
+    $nameField TEXT;
+    $descField TEXT;
+    $repeatField INTEGER;
+    $enableRepeatField INTEGER;
+    $deadLineField INTEGER;
+    $relationIDField INTEGER;
+    $enableRelationField INTEGER;
   
   );
   ''';
