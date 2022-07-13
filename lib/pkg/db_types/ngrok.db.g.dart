@@ -7,6 +7,7 @@
 part of 'ngrok.dart';
 
 class NgrokDBMetadata {
+  DeleteByidentity() {}
   static var identityField = "identity";
   static var apiKeyField = "apiKey";
   static var dbTable = "Ngrok";

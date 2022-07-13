@@ -6,6 +6,11 @@ class DBAnnotation {
   const DBAnnotation();
 }
 
+class DBPKAnnotation {
+  const DBPKAnnotation();
+}
+const _coreDBPKChecker = const TypeChecker.fromRuntime(DBPKAnnotation);
+
 class DBGenerator extends GeneratorForAnnotation<DBAnnotation> {
   @override
   generateForAnnotatedElement(e.Element element, ConstantReader annotation, BuildStep buildStep) {
@@ -30,6 +35,11 @@ class ${element.name}DBMetadata {
   String _analyseElementForClass(e.ClassElement classElement) {
     var fieldStr = "";
     for (var e in classElement.fields) {
+      if (_coreDBPKChecker.hasAnnotationOfExact(e)) {
+        // _coreDBPKChecker.firstAnnotationOfExact(e).getField(name)
+        fieldStr += "DeleteBy${e.name}() {}";
+      }
+      
       fieldStr += '''
 static var ${e.name}Field = "${e.name}";
 ''';

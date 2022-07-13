@@ -8,6 +8,7 @@ part 'ngrok.db.g.dart';
 @JsonSerializable(includeIfNull: false)
 @DBAnnotation()
 class Ngrok {
+  @DBPKAnnotation()
   String? identity;
 
   String? apiKey;
