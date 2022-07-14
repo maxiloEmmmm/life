@@ -55,9 +55,9 @@ class NgrokClient {
   static const apiKeyField = "api_key";
   static const dbTable = "Ngrok";
   static const dbSchema = '''
-  create table $dbTable (
-    $identityField TEXT;
-    $apiKeyField TEXT;
+  create table if not exists $dbTable (
+    $identityField TEXT,
+    $apiKeyField TEXT
   
   );
   ''';

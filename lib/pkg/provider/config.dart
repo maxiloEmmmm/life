@@ -13,8 +13,10 @@ class appConfig {
       "db_enable": true,
       "db_schema": '''
 ${NgrokClient.dbSchema}
-${PlanClient.dbSchema}
-'''
+''',
+      "db_migrate": [
+        PlanClient.dbSchema,
+      ],
     }, inDev: true);
   }
 }

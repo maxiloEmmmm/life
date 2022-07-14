@@ -60,15 +60,15 @@ class PlanClient {
   static const enableRelationField = "enableRelation";
   static const dbTable = "Plan";
   static const dbSchema = '''
-  create table $dbTable (
-    $idField INTEGER;
-    $nameField TEXT;
-    $descField TEXT;
-    $repeatField INTEGER;
-    $enableRepeatField INTEGER;
-    $deadLineField INTEGER;
-    $relationIDField INTEGER;
-    $enableRelationField INTEGER;
+  create table if not exists $dbTable (
+    $idField INTEGER,
+    $nameField TEXT,
+    $descField TEXT,
+    $repeatField INTEGER,
+    $enableRepeatField INTEGER,
+    $deadLineField INTEGER,
+    $relationIDField INTEGER,
+    $enableRelationField INTEGER
   
   );
   ''';
