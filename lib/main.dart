@@ -11,7 +11,7 @@ final Application app = Application();
 
 void main() {
   MinRoute route = app.make('route');
-  route.add('/', () => plan_add.Add(""));
+  route.add('/', () => Plan());
   route.add('/plan/add', () => plan_add.Add(""));
   route.add('/ngrok', () => const Ngrok());
   route.add('/ngrok/add', () => ngrok_add.Add(""));
