@@ -17,7 +17,11 @@ abstract class ItemInfo {
 
 class Item extends StatefulWidget {
   ItemFetch ng;
-  Item(this.ng):super(key: ValueKey("${ng.type()}_${ng.identity()}"));
+  List<IconButton>? actions;
+  Item({
+    required this.ng,
+    this.actions
+  }):super(key: UniqueKey());
 
   @override
   State<Item> createState() => _ItemState();
@@ -27,14 +31,18 @@ class _ItemState extends State<Item> {
   @override
   void initState() {
     super.initState();
-    fetch();
+    refresh();
   }
 
   Future<ItemInfo>? _fetch;
 
+  void refresh() {
+    _fetch = widget.ng.fetch();
+  }
+
   void fetch() {
     setState(() {
-      _fetch = widget.ng.fetch();
+      refresh();
     });
   }
 
@@ -60,7 +68,6 @@ class _ItemState extends State<Item> {
                 SlidableAction(
                   onPressed: (BuildContext context) async {
                     await widget.ng.update(context);
-                    fetch();
                   },
                   backgroundColor: Colors.blue.shade200,
                   foregroundColor: Colors.white,
@@ -76,6 +83,18 @@ class _ItemState extends State<Item> {
   }
 
   Widget view(BuildContext context, ItemInfo? ii, bool loading) {
+    List<Widget> btns = [];
+    
+    if(loading) {
+      btns.add(Container(child: const CupertinoActivityIndicator(), padding: EdgeInsets.all(12)));
+    }else {
+      widget.actions?.forEach((e) {
+        btns.add(e);
+      });
+      btns.add(IconButton(onPressed: () => fetch(), icon: const Icon(Icons.refresh)));
+    }
+
+
     return Container(
       margin: const EdgeInsets.only(top: 34),
       decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
@@ -103,7 +122,7 @@ class _ItemState extends State<Item> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                        flex: 1,
+                        flex: 7,
                         child: Container(
                           padding: EdgeInsets.only(left: 4),
                           child: Text(sprintf("NO.%s", [ii == null ? "-" : widget.ng.identity()])),
@@ -113,19 +132,13 @@ class _ItemState extends State<Item> {
                                       color: Colors.orange, width: 4))),
                         )),
                     //  todo: add refresh
-                    Container(
-                      width: 20,
-                      height: 20,
-                      child: Stack( 
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned(
-                            child: loading ? Container(child: const CupertinoActivityIndicator(), padding: EdgeInsets.all(12),) : IconButton(onPressed: () => fetch(), icon: const Icon(Icons.refresh)),
-                            top: -8, right: -8,
-                          )
-                        ],
+                    Expanded(
+                      flex: 3,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: btns,
                       ),
-                    )
+                    ),
                   ],
                 )
               ],

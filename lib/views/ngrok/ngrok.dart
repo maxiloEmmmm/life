@@ -87,7 +87,7 @@ class _NgrokState extends State<Ngrok> {
       body: Container(
         padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
         color: Colors.grey[150],
-        child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item(e)).toList()),
+        child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item(ng: e)).toList()),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[

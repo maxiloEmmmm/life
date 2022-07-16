@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/db_types/plan.dart' as db_plan;
 import 'package:focus/pkg/provider/db.dart';
+import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:sprintf/sprintf.dart';
 import 'package:focus/pkg/component/item.dart';
@@ -21,17 +25,19 @@ class _PlanState extends State<Plan> {
     fetch();
   }
 
-  void fetch() {
+  Future<List<ItemFetch>?>? fetchFunction() async {
+      try {
+        AppDB appDB = await Application.instance!.make("app_db");
+        var ps = await appDB.planClient.all();
+        return ps.map((e) => PlanFetch(() => context, e, () => fetch())).toList();
+      }catch(e) {
+        return null;
+      }
+  }
+
+  Future<void> fetch() async {
     setState(() {
-      _fetch = () async {
-        try {
-          AppDB appDB = await Application.instance!.make("app_db");
-          var ps = await appDB.planClient.all();
-          return ps.map((e) => PlanFetch(e)).toList();
-        }catch(e) {
-          return null;
-        }
-      }();
+      _fetch = fetchFunction();
     });
   }
 
@@ -45,14 +51,12 @@ class _PlanState extends State<Plan> {
         if(snapshot.hasData) {
           return view(context, snapshot.data);
         }else {
-          return const CircularProgressIndicator();
+          return const CupertinoActivityIndicator();
         }
       },
     );
   }
 
-  
-  
   Widget view(BuildContext context, List<ItemFetch>? ifs) {
     return Scaffold(
       appBar: AppBar(
@@ -66,30 +70,32 @@ class _PlanState extends State<Plan> {
             },
           )
         ],
+
       ),
-      body: Container(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-        color: Colors.grey[150],
-        child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item(e)).toList()),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.business),
-            label: 'Business',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'School',
-          ),
-        ],
-        currentIndex: 0,
-        selectedItemColor: Colors.amber[800],
-        onTap: (int index) => {},
+      body: RefreshIndicator(
+        onRefresh: () => fetch(),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+          color: Colors.grey[150],
+          child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item(ng: e, actions: [
+            IconButton(onPressed: () async {
+              AppDB appDB = await Application.instance!.make("app_db");
+              var p = (e as PlanFetch).plan;
+              var target = (p.joint ?? 0) + 1;
+              var jc = p.jointCount ?? 0;
+              if(target > jc || jc == 0) {
+                tip.TextAlertDesc(context, "太大了!");
+                return;
+              }
+              await appDB.planClient.update(p.id, db_plan.Plan(joint: (p.joint ?? 0) + 1));
+              tip.TextAlertDescWithCB(context, "ok", () async {
+                // todo 现在setState会导致整个树被rebuild 重构一下item
+                setState(() {
+                });
+              });
+            }, icon: const Icon(Icons.plus_one)),
+          ],)).toList()),
+        ),
       ),
     );
   }
@@ -98,7 +104,9 @@ class _PlanState extends State<Plan> {
 class PlanFetch extends ItemFetch {
   db_plan.Plan plan;
   String title = "";
-  PlanFetch(this.plan);
+  BuildContext Function() getCtx;
+  Function() onChange;
+  PlanFetch(this.getCtx, this.plan, this.onChange);
 
   @override
   String identity() {
@@ -107,15 +115,14 @@ class PlanFetch extends ItemFetch {
 
   @override
   Future<ItemInfo> fetch() async {
-    db_plan.Plan? p;
     bool error = false;
     try {
       AppDB appDB = await Application.instance!.make("app_db");
-      var p = await appDB.planClient.first(plan.id);
+      plan = (await appDB.planClient.first(plan.id))!;
     }catch(e) {
       error = true;
     }
-    return PlanInfo(p, error);
+    return PlanInfo(plan, error);
   }
 
   @override
@@ -125,13 +132,20 @@ class PlanFetch extends ItemFetch {
 
   @override
   Future remove(BuildContext context) async {
-    AppDB appDB = await Application.instance!.make("app_db");
-    return await appDB.planClient.delete(plan.id);
+    try {
+      AppDB appDB = await Application.instance!.make("app_db");
+      await appDB.planClient.delete(plan.id);
+      onChange();
+    }catch(e) {
+      tip.TextAlertDesc(getCtx(), "出错了");
+    }
   }
 
   @override
   Future update(BuildContext context) async {
-    await Navigator.pushNamed(context, sprintf("/plan/update/%s", [identity()]));
+    // todo 返回后刷新 因为update是在item里被调用
+    // 无法在返回时调用列表刷新
+    await Navigator.pushNamed(context, "/plan/update/${plan.id}");
   }
 }
 
@@ -145,10 +159,13 @@ class PlanInfo extends ItemInfo {
     return Row(
       children: [
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: error ? [
             const Text("错误了")
           ] : [
-            Row(children: [Text(p!.desc!)],)
+            Text(p!.desc!),
+            Text("joint: ${p!.joint ?? 0}/${p!.jointCount ?? 0}"),
+            Text("deadline: ${p!.deadLine!.year}.${p!.deadLine!.month}.${p!.deadLine!.day}, 还有${p!.deadLine!.difference(DateTime.now()).inDays}天")
           ],
         )
       ],

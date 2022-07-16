@@ -12,7 +12,8 @@ final Application app = Application();
 void main() {
   MinRoute route = app.make('route');
   route.add('/', () => Plan());
-  route.add('/plan/add', () => plan_add.Add(""));
+  route.add('/plan/add', () => plan_add.Add(0));
+  route.add('/plan/update/:id', (Map data) => plan_add.Add(int.parse(data["id"])));
   route.add('/ngrok', () => const Ngrok());
   route.add('/ngrok/add', () => ngrok_add.Add(""));
   route.add('/ngrok/update/:id', (Map data) => ngrok_add.Add(data["id"]));

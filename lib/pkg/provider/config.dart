@@ -13,9 +13,13 @@ class appConfig {
       "db_enable": true,
       "db_schema": '''
 ${NgrokClient.dbSchema}
+${PlanClient.dbSchema}
 ''',
       "db_migrate": [
-        PlanClient.dbSchema,
+        "drop table ${NgrokClient.dbTable}",
+        "drop table ${PlanClient.dbTable}",
+        NgrokClient.dbSchema,
+        PlanClient.dbSchema
       ],
     }, inDev: true);
   }

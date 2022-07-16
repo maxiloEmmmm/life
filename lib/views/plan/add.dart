@@ -2,10 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/component/form.dart';
 import 'package:focus/pkg/db_types/ngrok.dart';
+import 'package:focus/pkg/db_types/plan.dart';
+import 'package:focus/pkg/provider/db.dart';
 import 'package:focus/pkg/util/tip.dart';
+import 'package:focus/pkg/util/transform.dart';
+import 'package:maxilozoz_box/application.dart';
 
 class Add extends StatefulWidget {
-  String identity = "";
+  int identity = 0;
   Add(this.identity);
 
   @override
@@ -21,36 +25,72 @@ class _AddState extends State<Add> {
     fu = FormUtil(
       title: "Plan",
       fis: [
-        FormItem(field: "name", title: "名称"),
-        FormItem(field: "desc", defaultValue: "default desc", title: "描述", help: "至少两个字符", validate: (value) => (value as String).length > 2),
-        FormItem(field: "report", title: "是否重复", type: FormItemType.switchType, defaultValue: false, validate: (value) => value),
-        FormItem(field: "boom", title: "滑动", help: "要大于50", type: FormItemType.sliderType, defaultValue: 50.0, validate: (value) => value as double > 50),
+        FormItem(field: PlanClient.nameField, title: "名称"),
+        FormItem(field: PlanClient.descField, title: "描述"),
+        FormItem(field: PlanClient.deadLineField, title: "结束日期", type: FormItemType.datetimeType),
+        FormItem(field: PlanClient.jointCountField, title: "阶段总计", type: FormItemType.intType)
       ],
       change: () {
         setState(() {
           
         });
       },
-      save: (FormData data) {
+      save: (FormData data) async {
         if(!data.valid) {
           tip.TextAlertDesc(context, "请检查!");
           return;
         }
 
-        tip.TextAlertDescWithCB(context, "一切都好 请在console查看数据!", () => print("${data.data}"));
+        AppDB appDB = await Application.instance!.make("app_db");
+
+        map2DB(data.data);
+        if(widget.identity == 0) {
+          await appDB.planClient.insert(PlanJSONHelp.fromJson(data.data));
+        }else {
+          await appDB.planClient.update(widget.identity, PlanJSONHelp.fromJson(data.data));
+        }
+
+        tip.TextAlertDescWithCB(context, "一切都好", () => Navigator.pop(context));
       }
     );
+
+    if(widget.identity != 0) {
+      try {
+        fetch();
+      }catch(e) {
+        tip.TextAlertDescWithCB(context, e.toString(), () => Navigator.pop(context));
+      }
+    }
   }
 
   void fetch() {
-    
+    _fetch = () async {
+      AppDB appDB = await Application.instance!.make("app_db");
+      var p = await appDB.planClient.first(widget.identity);
+      fu!.setValue({
+        PlanClient.nameField: p!.name,
+        PlanClient.descField: p.desc,
+        PlanClient.deadLineField: p.deadLine,
+        PlanClient.jointCountField: p.jointCount,
+      });
+      return p;
+    }();
   }
 
-  Future<Ngrok?>? _fetch;
+  Future<Plan?>? _fetch;
 
 
   @override
   Widget build(BuildContext context) {
-    return fu!.view(context);
+    return FutureBuilder<Plan?>(
+      future: _fetch,
+      builder: (context, snapshot) {
+        if(snapshot.connectionState == ConnectionState.done || snapshot.connectionState == ConnectionState.none) {
+          return fu!.view(context);
+        }else {
+          return const CircularProgressIndicator();
+        }
+      },
+    );
   }
 }

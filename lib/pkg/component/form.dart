@@ -7,6 +7,7 @@ enum FormItemType {
   doubleType,
   switchType,
   sliderType,
+  datetimeType,
 }
 
 class FormItem {
@@ -88,6 +89,13 @@ class FormUtil {
           }
           valueSet[element.field] = value;
           break;
+        case FormItemType.datetimeType:
+          var value = DateTime.now();
+          if(element.defaultValue is DateTime) {
+            value = element.defaultValue as DateTime;
+          }
+          valueSet[element.field] = value;
+          break;
       }
 
       onChange(field: element.field);
@@ -105,15 +113,47 @@ class FormUtil {
   dynamic value(FormItem item) {
     switch(item.type) {
       case FormItemType.stringType:
-      case FormItemType.intType:
-      case FormItemType.doubleType:
         return (valueSet[item.field] as TextEditingController).text;
+      case FormItemType.intType:
+        try{
+          return int.parse((valueSet[item.field] as TextEditingController).text);
+        }catch(e) {
+          return 0;
+        }
+      case FormItemType.doubleType:
+        try{
+          return double.parse((valueSet[item.field] as TextEditingController).text);
+        }catch(e) {
+          return 0;
+        }
       case FormItemType.sliderType:
       case FormItemType.switchType:
+      case FormItemType.datetimeType:
         return valueSet[item.field];
       default:
         return null;
     }
+  }
+
+  setValue(Map<String, dynamic> data) {
+    data.forEach((key, value) {
+      var fi = formItemMap[key];
+      if(fi != null) {
+        switch(fi.type) {
+          case FormItemType.stringType:
+          case FormItemType.intType:
+
+          case FormItemType.doubleType:
+            (valueSet[fi.field] as TextEditingController).value = TextEditingValue(text: "$value");
+            break;
+          case FormItemType.sliderType:
+          case FormItemType.switchType:
+          case FormItemType.datetimeType:
+            valueSet[key] = value;
+          }
+        onChange(field: key);
+      }
+    });
   }
 
   onChange({
@@ -125,7 +165,27 @@ class FormUtil {
     }
   }
 
-  Widget input(FormItem fi) {
+  void _showDateTimeDialog(BuildContext context, Widget child) {
+    showCupertinoModalPopup<void>(
+        context: context,
+        builder: (BuildContext context) => Container(
+              height: 216,
+              padding: const EdgeInsets.only(top: 6.0),
+              // The Bottom margin is provided to align the popup above the system navigation bar.
+              margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              // Provide a background color for the popup.
+              color: CupertinoColors.systemBackground.resolveFrom(context),
+              // Use a SafeArea widget to avoid system overlaps.
+              child: SafeArea(
+                top: false,
+                child: child,
+              ),
+            ));
+  }
+
+  Widget input(BuildContext context, FormItem fi) {
     switch(fi.type) {
       case FormItemType.stringType:
         return TextField(
@@ -220,6 +280,48 @@ class FormUtil {
             ],
           ),
         );
+      case FormItemType.datetimeType:
+        return Container(
+          height: 56,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+              color: Colors.grey.shade500, 
+              width: 1))
+          ),
+          padding: EdgeInsets.all(8),
+          child: Column(
+            children: [
+              Flexible(child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(fi.title ?? ""),
+                  Flexible(child: GestureDetector(
+                    // Display a CupertinoDatePicker in date picker mode.
+                      onTap: () => _showDateTimeDialog(context,
+                        CupertinoDatePicker(
+                          initialDateTime: valueSet[fi.field],
+                          mode: CupertinoDatePickerMode.date,
+                          use24hFormat: true,
+                          // This is called when the user changes the date.
+                          onDateTimeChanged: (DateTime value) {
+                            valueSet[fi.field] = value;
+                            onChange(field: fi.field);
+                          },
+                        ),
+                      ),
+                      // In this example, the date value is formatted manually. You can use intl package
+                      // to format the value based on user's locale settings.
+                      child: Text(
+                        '${valueSet[fi.field].month}-${valueSet[fi.field].day}-${valueSet[fi.field].year}',
+                      )
+                    ))
+                ],
+              )),
+              Container(child: Row(children: !validateSet[fi.field]! ? [Text(fi.help, style: TextStyle(color: Colors.red),)] : []), height: 20,)
+            ],
+          ),
+        );
       default:
         return Text("unknown type ${fi.type}");
     }
@@ -251,7 +353,7 @@ class FormUtil {
         body: Container(
           padding: EdgeInsets.all(8),
           child: Column(
-            children: fis.map((field) => Flexible(child: input(field))).toList(),
+            children: fis.map((field) => Flexible(child: input(context, field))).toList(),
           ),
         )
     );

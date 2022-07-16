@@ -53,22 +53,18 @@ class PlanClient {
   static const idField = "id";
   static const nameField = "name";
   static const descField = "desc";
-  static const repeatField = "repeat";
-  static const enableRepeatField = "enableRepeat";
   static const deadLineField = "deadLine";
-  static const relationIDField = "relationID";
-  static const enableRelationField = "enableRelation";
+  static const jointField = "joint";
+  static const jointCountField = "jointCount";
   static const dbTable = "Plan";
   static const dbSchema = '''
   create table if not exists $dbTable (
-    $idField INTEGER,
+    $idField INTEGER PRIMARY KEY AUTOINCREMENT,
     $nameField TEXT,
     $descField TEXT,
-    $repeatField INTEGER,
-    $enableRepeatField INTEGER,
     $deadLineField INTEGER,
-    $relationIDField INTEGER,
-    $enableRelationField INTEGER
+    $jointField INTEGER,
+    $jointCountField INTEGER
   
   );
   ''';

@@ -13,28 +13,24 @@ part 'plan.db.g.dart';
 )
 @DBAnnotation()
 class Plan {
-  @DBPKAnnotation()
+  @DBPKAnnotation(AutoInsert: true)
   int? id;
 
   String? name;
   String? desc;
 
-  int? repeat;
-  bool? enableRepeat;
-
   DateTime? deadLine;
 
-  int? relationID;
-  bool? enableRelation;
+  int? joint;
+  int? jointCount;
+
 
   Plan({
     this.id,
     this.name,
     this.desc,
-    this.repeat,
-    this.enableRelation,
-    this.enableRepeat,
-    this.relationID,
+    this.joint,
+    this.jointCount,
     this.deadLine
   });
 }

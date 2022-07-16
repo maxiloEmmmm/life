@@ -56,7 +56,7 @@ class NgrokClient {
   static const dbTable = "Ngrok";
   static const dbSchema = '''
   create table if not exists $dbTable (
-    $identityField TEXT,
+    $identityField TEXT PRIMARY KEY ,
     $apiKeyField TEXT
   
   );
