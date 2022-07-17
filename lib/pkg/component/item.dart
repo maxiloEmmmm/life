@@ -3,44 +3,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:sprintf/sprintf.dart';
 
-abstract class ItemFetch {
-  Future<ItemInfo> fetch();
-  String identity();
-  Future remove(BuildContext context);
-  Future update(BuildContext context);
-  String type();
+class ItemAction<T> {
+  Widget icon;
+  Function(T?, void Function() refresh) cb;
+  ItemAction({
+    required this.icon,
+    required this.cb
+  });
 }
 
-abstract class ItemInfo {
-  Widget child(BuildContext context);
-}
-
-class Item extends StatefulWidget {
-  ItemFetch ng;
-  List<IconButton>? actions;
+class Item<T> extends StatefulWidget {
+  String type;
+  List<ItemAction<T>>? actions;
+  String Function(T)? title;
+  Function(T)? onRemove;
+  Function(T, void Function() refresh)? onUpdate;
+  Future<T?> Function() fetch;
+  Widget Function(BuildContext, T?) content;
   Item({
-    required this.ng,
+    required this.type,
+    required this.fetch,
+    required this.content,
+    this.title,
+    this.onRemove,
+    this.onUpdate,
     this.actions
   }):super(key: UniqueKey());
 
   @override
-  State<Item> createState() => _ItemState();
+  State<Item> createState() => _ItemState<T>();
 }
 
-class _ItemState extends State<Item> {
+class _ItemState<T> extends State<Item<T>> {
   @override
   void initState() {
     super.initState();
     refresh();
   }
 
-  Future<ItemInfo>? _fetch;
+  Future<T>? _fetch;
 
   void refresh() {
-    _fetch = widget.ng.fetch();
+    _fetch = widget.fetch() as Future<T>;
   }
 
-  void fetch() {
+  void doFetch() {
     setState(() {
       refresh();
     });
@@ -48,17 +55,17 @@ class _ItemState extends State<Item> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<ItemInfo>(
+    return FutureBuilder<T>(
       future: _fetch,
       builder: (context, snapshot) {
-          return Slidable(
-            endActionPane: ActionPane(
-              motion: const ScrollMotion(),
-              children: [
-                SlidableAction(
+          List<Widget> sBtn = [];
+          if(snapshot.data != null) {
+            sBtn.addAll([
+              SlidableAction(
                   onPressed: (BuildContext context) {
-                    //todo 如果删除后 list页面会删除这个item 此时context无效 会爆炸
-                    widget.ng.remove(context);
+                    if(widget.onRemove != null) {
+                      widget.onRemove!(snapshot.data!);
+                    }
                   },
                   backgroundColor: Color(0xFFFE4A49),
                   foregroundColor: Colors.white,
@@ -66,15 +73,23 @@ class _ItemState extends State<Item> {
                   label: '干掉',
                 ),
                 SlidableAction(
-                  onPressed: (BuildContext context) async {
-                    await widget.ng.update(context);
+                  onPressed: (BuildContext context) {
+                    if(widget.onUpdate != null) {
+                      widget.onUpdate!(snapshot.data!, doFetch);
+                    }
                   },
                   backgroundColor: Colors.blue.shade200,
                   foregroundColor: Colors.white,
                   icon: Icons.update,
                   label: '改变',
                 ),
-              ],
+            ]);
+          }
+
+          return Slidable(
+            endActionPane: ActionPane(
+              motion: const ScrollMotion(),
+              children: sBtn,
             ),
             child: view(context, snapshot.data, snapshot.connectionState != ConnectionState.done),
           );
@@ -82,18 +97,22 @@ class _ItemState extends State<Item> {
     );
   }
 
-  Widget view(BuildContext context, ItemInfo? ii, bool loading) {
+  Widget view(BuildContext context, T? ii, bool loading) {
     List<Widget> btns = [];
     
     if(loading) {
       btns.add(Container(child: const CupertinoActivityIndicator(), padding: EdgeInsets.all(12)));
     }else {
       widget.actions?.forEach((e) {
-        btns.add(e);
+        btns.add(IconButton(onPressed: () => e.cb(ii, doFetch), icon: e.icon));
       });
-      btns.add(IconButton(onPressed: () => fetch(), icon: const Icon(Icons.refresh)));
+      btns.add(IconButton(onPressed: () => doFetch(), icon: const Icon(Icons.refresh)));
     }
 
+    String title = "-";
+    if(widget.title != null && ii != null) {
+      title = widget.title!(ii);
+    }
 
     return Container(
       margin: const EdgeInsets.only(top: 34),
@@ -114,7 +133,7 @@ class _ItemState extends State<Item> {
                     top: -20,
                     child: Container(
                       child:
-                          Text(widget.ng.type(), style: TextStyle(color: Colors.white)),
+                          Text(widget.type, style: TextStyle(color: Colors.white)),
                       color: Colors.orange,
                       padding: EdgeInsets.all(2),
                     )),
@@ -124,8 +143,8 @@ class _ItemState extends State<Item> {
                     Expanded(
                         flex: 7,
                         child: Container(
-                          padding: EdgeInsets.only(left: 4),
-                          child: Text(sprintf("NO.%s", [ii == null ? "-" : widget.ng.identity()])),
+                          padding: const EdgeInsets.only(left: 4),
+                          child: Text(title),
                           decoration: const BoxDecoration(
                               border: Border(
                                   left: BorderSide(
@@ -146,7 +165,7 @@ class _ItemState extends State<Item> {
           ),
           Container(
             padding: EdgeInsets.all(8),
-            child: loading ? const Text("...") : ii!.child(context),
+            child: loading ? const Text("...") : widget.content(context, ii),
           )
         ],
       ),

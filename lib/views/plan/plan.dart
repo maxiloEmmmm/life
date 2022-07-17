@@ -17,7 +17,7 @@ class Plan extends StatefulWidget {
 }
 
 class _PlanState extends State<Plan> {
-  List<ItemFetch> ifs = [];
+  List<db_plan.Plan> ifs = [];
 
   @override
   void initState() {
@@ -25,11 +25,10 @@ class _PlanState extends State<Plan> {
     fetch();
   }
 
-  Future<List<ItemFetch>?>? fetchFunction() async {
+  Future<List<db_plan.Plan>?>? fetchFunction() async {
       try {
         AppDB appDB = await Application.instance!.make("app_db");
-        var ps = await appDB.planClient.all();
-        return ps.map((e) => PlanFetch(() => context, e, () => fetch())).toList();
+        return await appDB.planClient.all();
       }catch(e) {
         return null;
       }
@@ -41,11 +40,11 @@ class _PlanState extends State<Plan> {
     });
   }
 
-  Future<List<ItemFetch>?>? _fetch;
+  Future<List<db_plan.Plan>?>? _fetch;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<ItemFetch>?>(
+    return FutureBuilder<List<db_plan.Plan>?>(
       future: _fetch,
       builder: (context, snapshot) {
         if(snapshot.hasData) {
@@ -57,7 +56,7 @@ class _PlanState extends State<Plan> {
     );
   }
 
-  Widget view(BuildContext context, List<ItemFetch>? ifs) {
+  Widget view(BuildContext context, List<db_plan.Plan>? ifs) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Plan'),
@@ -77,98 +76,55 @@ class _PlanState extends State<Plan> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
           color: Colors.grey[150],
-          child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item(ng: e, actions: [
-            IconButton(onPressed: () async {
+          child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item<db_plan.Plan>(
+            type: "Plan",
+            title: (db_plan.Plan p) {
+              return p.name!;
+            }, 
+            onRemove: (db_plan.Plan p) async {
               AppDB appDB = await Application.instance!.make("app_db");
-              var p = (e as PlanFetch).plan;
-              var target = (p.joint ?? 0) + 1;
-              var jc = p.jointCount ?? 0;
-              if(target > jc || jc == 0) {
-                tip.TextAlertDesc(context, "太大了!");
-                return;
-              }
-              await appDB.planClient.update(p.id, db_plan.Plan(joint: (p.joint ?? 0) + 1));
-              tip.TextAlertDescWithCB(context, "ok", () async {
-                // todo 现在setState会导致整个树被rebuild 重构一下item
-                setState(() {
-                });
-              });
-            }, icon: const Icon(Icons.plus_one)),
-          ],)).toList()),
+              await appDB.planClient.delete(p.id);
+              fetch();
+            },
+            onUpdate: (db_plan.Plan p, Function() refresh) async {
+              Navigator.pushNamed(context, "/plan/update/${p.id}")
+                .then((value) => refresh());
+            },
+            fetch: () async {
+              AppDB appDB = await Application.instance!.make("app_db");
+              return (await appDB.planClient.first(e.id))!;
+            },
+            content: (BuildContext context, db_plan.Plan? p) {
+              return Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: p == null ? [
+                      const Text("错误了")
+                    ] : [
+                      Text(p.desc!),
+                      Text("joint: ${p.joint ?? 0}/${p.jointCount ?? 0}"),
+                      Text("deadline: ${p.deadLine!.year}.${p.deadLine!.month}.${p.deadLine!.day}, 还有${p.deadLine!.difference(DateTime.now()).inDays}天")
+                    ],
+                  )
+                ],
+              );
+            },
+            actions: [
+              ItemAction<db_plan.Plan>(cb: (db_plan.Plan? p, Function() refresh) async {
+                AppDB appDB = await Application.instance!.make("app_db");
+                var target = (p!.joint ?? 0) + 1;
+                var jc = p.jointCount ?? 0;
+                if(target > jc || jc == 0) {
+                  tip.TextAlertDesc(context, "太大了!");
+                  return;
+                }
+                await appDB.planClient.update(p.id, db_plan.Plan(joint: (p.joint ?? 0) + 1));
+                refresh();
+              }, icon: const Icon(Icons.plus_one)),
+            ],)).toList()),
         ),
       ),
-    );
-  }
-}
-
-class PlanFetch extends ItemFetch {
-  db_plan.Plan plan;
-  String title = "";
-  BuildContext Function() getCtx;
-  Function() onChange;
-  PlanFetch(this.getCtx, this.plan, this.onChange);
-
-  @override
-  String identity() {
-    return plan.name ?? "";
-  }
-
-  @override
-  Future<ItemInfo> fetch() async {
-    bool error = false;
-    try {
-      AppDB appDB = await Application.instance!.make("app_db");
-      plan = (await appDB.planClient.first(plan.id))!;
-    }catch(e) {
-      error = true;
-    }
-    return PlanInfo(plan, error);
-  }
-
-  @override
-  String type() {
-    return "Plan";
-  }
-
-  @override
-  Future remove(BuildContext context) async {
-    try {
-      AppDB appDB = await Application.instance!.make("app_db");
-      await appDB.planClient.delete(plan.id);
-      onChange();
-    }catch(e) {
-      tip.TextAlertDesc(getCtx(), "出错了");
-    }
-  }
-
-  @override
-  Future update(BuildContext context) async {
-    // todo 返回后刷新 因为update是在item里被调用
-    // 无法在返回时调用列表刷新
-    await Navigator.pushNamed(context, "/plan/update/${plan.id}");
-  }
-}
-
-class PlanInfo extends ItemInfo {
-  db_plan.Plan? p;
-  bool error;
-  PlanInfo(this.p, this.error);
-
-  @override
-  Widget child(BuildContext context) {
-    return Row(
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: error ? [
-            const Text("错误了")
-          ] : [
-            Text(p!.desc!),
-            Text("joint: ${p!.joint ?? 0}/${p!.jointCount ?? 0}"),
-            Text("deadline: ${p!.deadLine!.year}.${p!.deadLine!.month}.${p!.deadLine!.day}, 还有${p!.deadLine!.difference(DateTime.now()).inDays}天")
-          ],
-        )
-      ],
     );
   }
 }
