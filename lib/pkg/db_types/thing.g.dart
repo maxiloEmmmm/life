@@ -1,23 +1,18 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'plan.dart';
+part of 'thing.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-Plan _$PlanFromJson(Map<String, dynamic> json) => Plan(
+Thing _$ThingFromJson(Map<String, dynamic> json) => Thing(
       id: json['id'] as int?,
       name: json['name'] as String?,
       desc: json['desc'] as String?,
-      joint: json['joint'] as int?,
-      jointCount: json['jointCount'] as int?,
-      deadLine: json['deadLine'] == null
-          ? null
-          : DateTime.parse(json['deadLine'] as String),
     );
 
-Map<String, dynamic> _$PlanToJson(Plan instance) {
+Map<String, dynamic> _$ThingToJson(Thing instance) {
   final val = <String, dynamic>{};
 
   void writeNotNull(String key, dynamic value) {
@@ -29,8 +24,5 @@ Map<String, dynamic> _$PlanToJson(Plan instance) {
   writeNotNull('id', instance.id);
   writeNotNull('name', instance.name);
   writeNotNull('desc', instance.desc);
-  writeNotNull('deadLine', instance.deadLine?.toIso8601String());
-  writeNotNull('joint', instance.joint);
-  writeNotNull('jointCount', instance.jointCount);
   return val;
 }

@@ -28,7 +28,7 @@ class Item<T> extends StatefulWidget {
     this.onRemove,
     this.onUpdate,
     this.actions
-  }):super(key: UniqueKey());
+  });
 
   @override
   State<Item> createState() => _ItemState<T>();

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/db_types/ngrok.dart' as ngrok_db;
 import 'package:focus/pkg/fetch/ngrok.dart' as ngrok_sdk;
@@ -64,7 +65,7 @@ class _NgrokState extends State<Ngrok> {
         if(snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
           return view(context, snapshot.data);
         }else {
-          return const CircularProgressIndicator();
+          return const CupertinoActivityIndicator();
         }
       },
     );
@@ -143,25 +144,6 @@ class _NgrokState extends State<Ngrok> {
             );
           }
         )).toList()),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.business),
-            label: 'Business',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'School',
-          ),
-        ],
-        currentIndex: 0,
-        selectedItemColor: Colors.amber[800],
-        onTap: (int index) => {},
       ),
     );
   }

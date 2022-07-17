@@ -1,5 +1,7 @@
+import 'package:focus/pkg/db_types/award.dart';
 import 'package:focus/pkg/db_types/ngrok.dart';
 import 'package:focus/pkg/db_types/plan.dart';
+import 'package:focus/pkg/db_types/thing.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/config/config.dart';
 
@@ -18,8 +20,12 @@ ${PlanClient.dbSchema}
       "db_migrate": [
         "drop table ${NgrokClient.dbTable}",
         "drop table ${PlanClient.dbTable}",
+        "drop table ${AwardClient.dbTable}",
+        "drop table ${ThingClient.dbTable}",
         NgrokClient.dbSchema,
-        PlanClient.dbSchema
+        PlanClient.dbSchema,
+        AwardClient.dbSchema,
+        ThingClient.dbSchema,
       ],
     }, inDev: true);
   }
