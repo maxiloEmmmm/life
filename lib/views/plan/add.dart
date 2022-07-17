@@ -28,7 +28,7 @@ class _AddState extends State<Add> {
         FormItem(field: PlanClient.nameField, title: "名称"),
         FormItem(field: PlanClient.descField, title: "描述"),
         FormItem(field: PlanClient.deadLineField, title: "结束日期", type: FormItemType.datetimeType),
-        FormItem(field: PlanClient.jointCountField, title: "阶段总计", type: FormItemType.intType)
+        FormItem(field: PlanClient.jointCountField, title: "阶段总计", help: "大于0哦", type: FormItemType.intType, validate: (value) => value as int > 0)
       ],
       change: () {
         setState(() {

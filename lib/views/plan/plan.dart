@@ -47,7 +47,7 @@ class _PlanState extends State<Plan> {
     return FutureBuilder<List<db_plan.Plan>?>(
       future: _fetch,
       builder: (context, snapshot) {
-        if(snapshot.hasData) {
+        if(snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
           return view(context, snapshot.data);
         }else {
           return const CupertinoActivityIndicator();

@@ -61,7 +61,7 @@ class _NgrokState extends State<Ngrok> {
     return FutureBuilder<List<ngrok_db.Ngrok>?>(
       future: _fetch,
       builder: (context, snapshot) {
-        if(snapshot.hasData) {
+        if(snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
           return view(context, snapshot.data);
         }else {
           return const CircularProgressIndicator();
