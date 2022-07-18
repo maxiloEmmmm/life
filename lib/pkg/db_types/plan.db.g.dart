@@ -67,5 +67,7 @@ class PlanClient {
     $jointCountField INTEGER
   
   );
+
+  
   ''';
 }

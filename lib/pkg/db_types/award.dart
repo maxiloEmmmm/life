@@ -1,6 +1,7 @@
 import 'package:focus/pkg/converters/list_int_string.dart';
 import 'package:json_annotation/json_annotation.dart';
-
+import 'package:focus/pkg/db_types/plan.dart';
+import 'package:focus/pkg/db_types/thing.dart';
 import "package:maxilozoz_box/modules/storage/sqlite/sqlite.dart";
 import 'package:maxilozoz_box/modules/storage/sqlite/build/annotation.dart';
 
@@ -8,7 +9,10 @@ part 'award.g.dart';
 part 'award.db.g.dart';
 
 @JsonSerializable(includeIfNull: false)
-@DBAnnotation()
+@DBAnnotation(edges: [
+  DBEdge(relation: "Plan"),
+  DBEdge(relation: "Thing", unique: true)
+])
 @ListInt2String()
 class Award {
   @DBPKAnnotation(AutoInsert: true)
@@ -18,16 +22,8 @@ class Award {
 
   String? desc;
 
-  @JsonKey(name: "thing_id")
-  int? thingID;
-
-  @JsonKey(name: "plan_ids")
-  List<int>? planIDs;
-
   Award({
     this.id,
-    this.thingID,
-    this.planIDs,
     this.desc,
     this.name
   });

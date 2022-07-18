@@ -61,5 +61,7 @@ class ThingClient {
     $descField TEXT
   
   );
+
+  
   ''';
 }

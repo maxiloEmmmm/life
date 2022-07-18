@@ -9,6 +9,7 @@ part 'thing.db.g.dart';
 @JsonSerializable(includeIfNull: false)
 @DBAnnotation()
 class Thing {
+  
   @DBPKAnnotation(AutoInsert: true)
   int? id;
 

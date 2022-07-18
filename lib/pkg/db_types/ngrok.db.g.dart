@@ -60,5 +60,7 @@ class NgrokClient {
     $apiKeyField TEXT
   
   );
+
+  
   ''';
 }
