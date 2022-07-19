@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:focus/pkg/component/checkbox.dart';
 
 enum FormItemType {
   stringType,
@@ -8,6 +9,7 @@ enum FormItemType {
   switchType,
   sliderType,
   datetimeType,
+  checkboxType,
 }
 
 class FormItem {
@@ -18,6 +20,7 @@ class FormItem {
   bool disable;
   dynamic defaultValue;
   String field;
+  Map option;
 
   FormItem({
     required this.field,
@@ -27,6 +30,7 @@ class FormItem {
     this.defaultValue,
     this.disable = false,
     this.type = FormItemType.stringType,
+    this.option = const {}
   }) {
     validate ??= (value) => true;
   }
@@ -62,6 +66,13 @@ class FormUtil {
       validateSet[element.field] = true;
       formItemMap[element.field] = element;
       switch(element.type) {
+        case FormItemType.checkboxType:
+          List value = [];
+          if(element.defaultValue is List) {
+            value = element.defaultValue;
+          }
+          valueSet[element.field] = value;
+          break;
         case FormItemType.stringType:
         case FormItemType.intType:
         case FormItemType.doubleType:
@@ -126,6 +137,12 @@ class FormUtil {
         }catch(e) {
           return 0;
         }
+      case FormItemType.checkboxType:
+        List ret = [];
+        (valueSet[item.field] as List).forEach((element) {
+          ret.add(element);
+        });
+        return ret;
       case FormItemType.sliderType:
       case FormItemType.switchType:
       case FormItemType.datetimeType:
@@ -146,6 +163,13 @@ class FormUtil {
           case FormItemType.doubleType:
             (valueSet[fi.field] as TextEditingController).value = TextEditingValue(text: "$value");
             break;
+          case FormItemType.checkboxType:
+            List ret = [];
+            (valueSet[key] as List).forEach((element) {
+              ret.add(element);
+            });
+            valueSet[key] = ret;
+            break;
           case FormItemType.sliderType:
           case FormItemType.switchType:
           case FormItemType.datetimeType:
@@ -161,6 +185,7 @@ class FormUtil {
     var fi = formItemMap[field]!;
     validateSet[field] = fi.validate!(value(fi));
     if(change != null) {
+      // todo: 现在是由change提供setstate 刷新界面 后期可能有表单性能问题
       change!();
     }
   }
@@ -181,6 +206,39 @@ class FormUtil {
               child: SafeArea(
                 top: false,
                 child: child,
+              ),
+            ));
+  }
+
+  void _showCheckboxDialog(BuildContext context, String title, Widget child) {
+    showCupertinoModalPopup<void>(
+        context: context,
+        builder: (BuildContext context) => Container(
+          width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              padding: const EdgeInsets.only(top: 6.0),
+              // The Bottom margin is provided to align the popup above the system navigation bar.
+              margin: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              // Provide a background color for the popup.
+              color: CupertinoColors.systemBackground.resolveFrom(context),
+              // Use a SafeArea widget to avoid system overlaps.
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    CupertinoNavigationBar(
+                      middle: Text(title),
+                      trailing: TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text("Done"),
+                      ),
+                    ),
+                    child,
+                  ],
+                ),
               ),
             ));
   }
@@ -230,7 +288,7 @@ class FormUtil {
           padding: EdgeInsets.all(8),
           child: Column(
             children: [
-              Flexible(child: Row(
+              Expanded(flex: 1, child: Row(
                 children: [
                   Text("${fi.title ?? ""}(${valueSet[fi.field]})"),
                   const Spacer(flex: 2),
@@ -247,7 +305,7 @@ class FormUtil {
                   ),)
                 ],
               )),
-              Container(child: Row(children: !validateSet[fi.field]! ? [Text(fi.help, style: TextStyle(color: Colors.red),)] : []), height: 20,)
+              validateSet[fi.field]! ? Container() : Container(child: Row(children: [Text(fi.help, style: TextStyle(color: Colors.red),)]), height: 20,)
             ],
           ),
         );
@@ -263,7 +321,7 @@ class FormUtil {
           padding: EdgeInsets.all(8),
           child: Column(
             children: [
-              Flexible(child: Row(
+              Expanded(flex: 1, child: Row(
                 children: [
                   Text(fi.title ?? ""),
                   const Spacer(flex: 8),
@@ -276,7 +334,7 @@ class FormUtil {
                   ))
                 ],
               )),
-              Container(child: Row(children: !validateSet[fi.field]! ? [Text(fi.help, style: TextStyle(color: Colors.red),)] : []), height: 20,)
+              validateSet[fi.field]! ? Container() : Container(child: Row(children: [Text(fi.help, style: TextStyle(color: Colors.red),)]), height: 20,)
             ],
           ),
         );
@@ -292,7 +350,7 @@ class FormUtil {
           padding: EdgeInsets.all(8),
           child: Column(
             children: [
-              Flexible(child: Row(
+              Expanded(flex: 1, child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(fi.title ?? ""),
@@ -318,9 +376,50 @@ class FormUtil {
                     ))
                 ],
               )),
-              Container(child: Row(children: !validateSet[fi.field]! ? [Text(fi.help, style: TextStyle(color: Colors.red),)] : []), height: 20,)
+              validateSet[fi.field]! ? Container() : Container(child: Row(children: [Text(fi.help, style: TextStyle(color: Colors.red),)]), height: 20,)            
             ],
           ),
+        );
+      case FormItemType.checkboxType:
+        var text = ((fi.option["checkboxOptions"] ?? []) as List<CheckboxKitOption>).where((element) => (valueSet[fi.field] as List).contains(element.value)).map((e) => e.label).toList().join(",");
+        return Container(
+          height: 56,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+              color: Colors.grey.shade500, 
+              width: 1))
+          ),
+          padding: EdgeInsets.all(8),
+          child: Row(
+            children: [
+              Expanded(flex: 1, child:               
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _showCheckboxDialog(context, fi.title ?? "", CheckboxKit(
+                    value: valueSet[fi.field],
+                    checks: fi.option["checkboxOptions"] ?? [],
+                    change: (List val) {
+                      valueSet[fi.field] = val;
+                      onChange(field: fi.field);
+                    },
+                  )),
+                  child: Column(
+                    children: [
+                      Expanded(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(fi.title ?? ""),
+                          Flexible(child: Text(text))
+                        ],
+                      )),
+                      validateSet[fi.field]! ? Container() : Container(child: Row(children: [Text(fi.help, style: TextStyle(color: Colors.red),)]), height: 20,)
+                    ],
+                  )
+                )
+              )
+            ],
+          )
         );
       default:
         return Text("unknown type ${fi.type}");

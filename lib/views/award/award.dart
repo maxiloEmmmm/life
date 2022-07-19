@@ -101,8 +101,6 @@ class _AwardViewState extends State<AwardView> {
                       const Text("错误了")
                     ] : [
                       Text(p.desc!),
-                      Text("thing: ${p.thingID}"),
-                      Text("plans: ${p.planIDs!.join(",")}"),
                     ],
                   )
                 ],

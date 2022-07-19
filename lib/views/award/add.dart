@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:focus/pkg/component/checkbox.dart';
 import 'package:focus/pkg/component/form.dart';
 import 'package:focus/pkg/db_types/award.dart';
 import 'package:focus/pkg/provider/db.dart';
@@ -17,6 +18,8 @@ class Add extends StatefulWidget {
 class _AddState extends State<Add> {
   FormUtil? fu;
 
+  static const String thingField = "thing";
+
   @override
   initState() {
     super.initState();
@@ -25,6 +28,14 @@ class _AddState extends State<Add> {
       fis: [
         FormItem(field: AwardClient.nameField, title: "名称", validate: (value) => value as String != ""),
         FormItem(field: AwardClient.descField, title: "描述"),
+        FormItem(field: thingField, title: "礼物!", type: FormItemType.checkboxType, option: {
+          "checkboxOptions": [
+            CheckboxKitOption(label: "a", value: 0, desc: "123"),
+            CheckboxKitOption(label: "b", value: 1),
+            CheckboxKitOption(label: "c", value: 2),
+            CheckboxKitOption(label: "d", value: 3),
+          ]
+        }),
       ],
       change: () {
         setState(() {

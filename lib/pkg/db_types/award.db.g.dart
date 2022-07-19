@@ -15,12 +15,31 @@ class AwardClient {
   Database db;
   AwardClient(this.db);
 
+  Future<void> delPlans(int identity) async {
+    await db.rawDelete("delete from Award_Plan where Award_id = ?", [identity]);
+  }
+
+  Future<void> setPlans(int identity, List<int> Plan_identities) async {
+    await delPlans(identity);
+    var iterator = Plan_identities.iterator;
+    while (iterator.moveNext()) {
+      await db.rawInsert(
+          "insert into Award_Plan(Award_id, Plan_id) values(?, ?)",
+          [identity, iterator.current]);
+    }
+  }
+
   Future<List<Plan>> getPlans(int identity) async {
     return (await db.rawQuery(
             "select * from Plan where id in (select Plan_id from Award_Plan where Award_id=?)",
             [identity]))
         .map((e) => PlanJSONHelp.fromJson(e))
         .toList();
+  }
+
+  Future<int> setThing(int identity, int Thing_identity) async {
+    return await db.rawUpdate("update Award set Thing_id = ? where id = ?",
+        [Thing_identity, identity]);
   }
 
   Future<Thing?> getThing(int identity) async {
@@ -33,7 +52,6 @@ class AwardClient {
 
     return ThingJSONHelp.fromJson(rows[0]);
   }
-// todo: insert update delete
 
   Future<List<Award>> all() async {
     return (await db.rawQuery("select * from $dbTable"))
@@ -52,6 +70,8 @@ class AwardClient {
   }
 
   Future<int> delete(int? id) async {
+    await delPlans(id!);
+
     return await db.rawDelete("delete from $dbTable where $idField = ?", [id]);
   }
 
@@ -84,7 +104,7 @@ class AwardClient {
   );
 
   create table if not exists Award_Plan (
-    Award_id INTEGER,
+    Award_id INTEGER PRIMARY KEY,
     Plan_id INTEGER
   );
 

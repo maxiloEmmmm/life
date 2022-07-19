@@ -16,16 +16,14 @@ class appConfig {
       "db_schema": '''
 ${NgrokClient.dbSchema}
 ${PlanClient.dbSchema}
+${AwardClient.dbSchema},
+${ThingClient.dbSchema},
 ''',
       "db_migrate": [
-        "drop table ${NgrokClient.dbTable}",
-        "drop table ${PlanClient.dbTable}",
-        "drop table ${AwardClient.dbTable}",
-        "drop table ${ThingClient.dbTable}",
         NgrokClient.dbSchema,
         PlanClient.dbSchema,
         AwardClient.dbSchema,
-        ThingClient.dbSchema,
+        ThingClient.dbSchema
       ],
     }, inDev: true);
   }
