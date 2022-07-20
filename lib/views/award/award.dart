@@ -90,15 +90,15 @@ class _AwardViewState extends State<AwardView> {
           child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item<AwardViewItem>(
             type: "Award",
             title: (AwardViewItem p) {
-              return p.award!.name!;
+              return p.award.name!;
             }, 
             onRemove: (AwardViewItem p) async {
               AppDB appDB = await Application.instance!.make("app_db");
-              await appDB.awardClient.delete(p.award!.id);
+              await appDB.awardClient.delete(p.award.id);
               fetch();
             },
             onUpdate: (AwardViewItem p, Function() refresh) async {
-              Navigator.pushNamed(context, "/award/update/${p.award!.id}")
+              Navigator.pushNamed(context, "/award/update/${p.award.id}")
                 .then((value) => refresh());
             },
             fetch: () async {

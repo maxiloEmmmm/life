@@ -28,7 +28,7 @@ void main() {
   route.add('/thing/update/:id', (Map data) => thing_add.Add(data["id"]));
   route.add('/award', () => const AwardView());
   route.add('/award/add', () => award_add.Add(0));
-  route.add('/award/update/:id', (Map data) => award_add.Add(data["id"]));
+  route.add('/award/update/:id', (Map data) => award_add.Add(int.parse(data["id"])));
   app.serviceProvider.register(appConfig());
   app.serviceProvider.register(AppDBProvider());
   app.run();

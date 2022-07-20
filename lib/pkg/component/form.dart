@@ -189,7 +189,7 @@ class FormUtil {
             break;
           case FormItemType.checkboxType:
             List ret = [];
-            (valueSet[key] as List).forEach((element) {
+            value.forEach((element) {
               ret.add(element);
             });
             valueSet[key] = ret;
