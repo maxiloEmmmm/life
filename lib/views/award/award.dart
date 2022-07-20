@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/db_types/award.dart';
+import 'package:focus/pkg/db_types/plan.dart';
+import 'package:focus/pkg/db_types/thing.dart';
 import 'package:focus/pkg/provider/db.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:focus/pkg/component/item.dart';
@@ -12,6 +14,17 @@ class AwardView extends StatefulWidget {
 
   @override
   State<AwardView> createState() => _AwardViewState();
+}
+
+class AwardViewItem {
+  Award award;
+  List<Plan> plans;
+  Thing thing;
+  AwardViewItem({
+    required this.award,
+    required this.plans,
+    required this.thing
+  });
 }
 
 class _AwardViewState extends State<AwardView> {
@@ -32,7 +45,7 @@ class _AwardViewState extends State<AwardView> {
       }
   }
 
-  Future<void> fetch() async {
+  Future<List<Award>?> fetch() async {
     setState(() {
       _fetch = fetchFunction();
     });
@@ -74,25 +87,29 @@ class _AwardViewState extends State<AwardView> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
           color: Colors.grey[150],
-          child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item<Award>(
+          child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item<AwardViewItem>(
             type: "Award",
-            title: (Award p) {
-              return p.name!;
+            title: (AwardViewItem p) {
+              return p.award!.name!;
             }, 
-            onRemove: (Award p) async {
+            onRemove: (AwardViewItem p) async {
               AppDB appDB = await Application.instance!.make("app_db");
-              await appDB.awardClient.delete(p.id);
+              await appDB.awardClient.delete(p.award!.id);
               fetch();
             },
-            onUpdate: (Award p, Function() refresh) async {
-              Navigator.pushNamed(context, "/award/update/${p.id}")
+            onUpdate: (AwardViewItem p, Function() refresh) async {
+              Navigator.pushNamed(context, "/award/update/${p.award!.id}")
                 .then((value) => refresh());
             },
             fetch: () async {
               AppDB appDB = await Application.instance!.make("app_db");
-              return (await appDB.awardClient.first(e.id))!;
+              return AwardViewItem(
+                award: (await appDB.awardClient.first(e.id))!,
+                plans: await appDB.awardClient.getPlans(e.id!),
+                thing: (await appDB.awardClient.getThing(e.id!))!,
+              );
             },
-            content: (BuildContext context, Award? p) {
+            content: (BuildContext context, AwardViewItem? p) {
               return Row(
                 children: [
                   Column(
@@ -100,7 +117,9 @@ class _AwardViewState extends State<AwardView> {
                     children: p == null ? [
                       const Text("错误了")
                     ] : [
-                      Text(p.desc!),
+                      Text(p.award.desc!),
+                      Text("plans: ${p.plans.map((e) => e.name).toList().join(",")}"),
+                      Text("award: ${p.thing.name}"),
                     ],
                   )
                 ],

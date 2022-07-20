@@ -71,9 +71,11 @@ class CheckboxKit extends StatefulWidget {
   List<CheckboxKitOption> checks = [];
   List value = [];
   Function(List)? change;
+  bool unique;
   CheckboxKit({
     this.checks = const [],
     this.change,
+    this.unique = false,
     this.value = const []
   });
 
@@ -108,13 +110,17 @@ class _CheckboxKitState extends State<CheckboxKit> {
               defaultCheck: widget.value.contains(e.value), 
               change: (check){
                 setState(() {
-                  var set = widget.value.toSet();
-                  if(check) {
-                    set.add(e.value);
+                  if(widget.unique) {
+                    widget.value = [e.value];
                   }else {
-                    set.remove(e.value);
+                    var set = widget.value.toSet();
+                    if(check) {
+                      set.add(e.value);
+                    }else {
+                      set.remove(e.value);
+                    }
+                    widget.value = set.toList();
                   }
-                  widget.value = set.toList();
                   if(widget.change != null) {
                     widget.change!(widget.value);
                   }

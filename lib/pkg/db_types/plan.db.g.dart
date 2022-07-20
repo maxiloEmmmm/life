@@ -54,6 +54,7 @@ class PlanClient {
   static const nameField = "name";
   static const descField = "desc";
   static const deadLineField = "deadLine";
+  static const createdAtField = "createdAt";
   static const jointField = "joint";
   static const jointCountField = "jointCount";
   static const dbTable = "Plan";
@@ -63,11 +64,12 @@ class PlanClient {
     $nameField TEXT,
     $descField TEXT,
     $deadLineField INTEGER,
+    $createdAtField INTEGER,
     $jointField INTEGER,
     $jointCountField INTEGER
   
   );
+''';
 
-  
-  ''';
+  static const dbEdgeSchemas = [];
 }

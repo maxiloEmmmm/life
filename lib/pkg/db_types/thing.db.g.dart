@@ -61,7 +61,7 @@ class ThingClient {
     $descField TEXT
   
   );
+''';
 
-  
-  ''';
+  static const dbEdgeSchemas = [];
 }

@@ -20,6 +20,7 @@ class Plan {
   String? desc;
 
   DateTime? deadLine;
+  DateTime? createdAt;
 
   int? joint;
   int? jointCount;

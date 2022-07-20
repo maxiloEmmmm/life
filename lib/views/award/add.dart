@@ -19,77 +19,102 @@ class _AddState extends State<Add> {
   FormUtil? fu;
 
   static const String thingField = "thing";
+  static const String plansField = "plans";
 
   @override
   initState() {
     super.initState();
-    fu = FormUtil(
-      title: "Award",
-      fis: [
-        FormItem(field: AwardClient.nameField, title: "名称", validate: (value) => value as String != ""),
-        FormItem(field: AwardClient.descField, title: "描述"),
-        FormItem(field: thingField, title: "礼物!", type: FormItemType.checkboxType, option: {
-          "checkboxOptions": [
-            CheckboxKitOption(label: "a", value: 0, desc: "123"),
-            CheckboxKitOption(label: "b", value: 1),
-            CheckboxKitOption(label: "c", value: 2),
-            CheckboxKitOption(label: "d", value: 3),
-          ]
-        }),
-      ],
-      change: () {
-        setState(() {
-          
-        });
-      },
-      save: (FormData data) async {
-        if(!data.valid) {
-          tip.TextAlertDesc(context, "请检查!");
-          return;
-        }
-
-        AppDB appDB = await Application.instance!.make("app_db");
-
-        map2DB(data.data);
-        if(widget.identity == 0) {
-          await appDB.awardClient.insert(AwardJSONHelp.fromJson(data.data));
-        }else {
-          await appDB.awardClient.update(widget.identity, AwardJSONHelp.fromJson(data.data));
-        }
-
-        tip.TextAlertDescWithCB(context, "一切都好", () => Navigator.pop(context));
-      }
-    );
-
-    if(widget.identity != 0) {
-      try {
-        fetch();
-      }catch(e) {
-        tip.TextAlertDescWithCB(context, e.toString(), () => Navigator.pop(context));
-      }
-    }
+    fetch();
   }
 
   void fetch() {
     _fetch = () async {
       AppDB appDB = await Application.instance!.make("app_db");
-      var p = await appDB.awardClient.first(widget.identity);
-      fu!.setValue({
-        AwardClient.nameField: p!.name,
-        AwardClient.descField: p.desc,
-      });
-      return p;
+      
+      var planOptions = (await appDB.planClient.all()).map((e) => CheckboxKitOption(
+        label: e.name!, 
+        value: e.id,
+        desc: e.desc!)).toList();
+      var thingOptions = (await appDB.thingClient.all()).map((e) => CheckboxKitOption(
+        label: e.name!, 
+        value: e.id,
+        desc: e.desc!)).toList();
+
+      if(thingOptions.isEmpty) {
+        tip.TextAlertDescWithCB(context, "毫无奖品", () => Navigator.pop(context));
+        return;
+      }
+
+      if(planOptions.isEmpty) {
+        tip.TextAlertDescWithCB(context, "毫无计划", () => Navigator.pop(context));
+        return;
+      }
+      
+      fu = FormUtil(
+        title: "Award",
+        fis: [
+          FormItem(field: AwardClient.nameField, title: "名称", validate: (value) => value as String != ""),
+          FormItem(field: AwardClient.descField, title: "描述"),
+          FormItem(field: thingField, title: "礼物!", type: FormItemType.radioType, option: {
+            checkboxOptions: thingOptions,
+          }),
+          FormItem(field: plansField, title: "计划", type: FormItemType.checkboxType, option: {
+            checkboxOptions: planOptions,
+          }, validate: (value) => (value as List).isNotEmpty),
+        ],
+        change: () {
+          setState(() {
+            
+          });
+        },
+        save: (FormData data) async {
+          if(!data.valid) {
+            tip.TextAlertDesc(context, "请检查!");
+            return;
+          }
+
+          AppDB appDB = await Application.instance!.make("app_db");
+
+          map2DB(data.data);
+          if(widget.identity == 0) {
+            widget.identity = await appDB.awardClient.insert(AwardJSONHelp.fromJson(data.data));
+          }else {
+            await appDB.awardClient.update(widget.identity, AwardJSONHelp.fromJson(data.data));
+          }
+
+          await appDB.awardClient.setPlans(widget.identity, (data.data[plansField] as List).map((e) => e as int).toList());
+          await appDB.awardClient.setThing(widget.identity, data.data[thingField]);
+
+          tip.TextAlertDescWithCB(context, "一切都好", () => Navigator.pop(context));
+        }
+      );
+
+      if(widget.identity != 0) {
+        try {
+          var p = await appDB.awardClient.first(widget.identity);
+          var plans = await appDB.awardClient.getPlans(p!.id!);
+          var thing = await appDB.awardClient.getThing(p.id!);
+          fu!.setValue({
+            AwardClient.nameField: p.name,
+            AwardClient.descField: p.desc,
+            thingField: thing!.id,
+            plansField: plans.map((e) => e.id).toList()
+          });
+        }catch(e) {
+          tip.TextAlertDescWithCB(context, e.toString(), () => Navigator.pop(context));
+        }
+      }
     }();
   }
 
-  Future<Award?>? _fetch;
+  Future<void>? _fetch;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Award?>(
+    return FutureBuilder<void>(
       future: _fetch,
       builder: (context, snapshot) {
-        if(snapshot.connectionState == ConnectionState.done || snapshot.connectionState == ConnectionState.none) {
+        if(fu != null && snapshot.connectionState == ConnectionState.done || snapshot.connectionState == ConnectionState.none) {
           return fu!.view(context);
         }else {
           return const CircularProgressIndicator();

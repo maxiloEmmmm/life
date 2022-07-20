@@ -10,7 +10,10 @@ enum FormItemType {
   sliderType,
   datetimeType,
   checkboxType,
+  radioType
 }
+
+const checkboxOptions = "checkboxOptions";
 
 class FormItem {
   String? title;
@@ -66,6 +69,22 @@ class FormUtil {
       validateSet[element.field] = true;
       formItemMap[element.field] = element;
       switch(element.type) {
+        case FormItemType.radioType:
+          var opts = [];
+          if(element.option[checkboxOptions] is List<CheckboxKitOption>) {
+            opts = element.option[checkboxOptions];
+          }
+
+          if(opts.isEmpty) {
+            throw "don't allow empty checkboxOptions on radioType";
+          }
+
+          List value = [opts[0].value];
+          if(element.defaultValue != null) {
+            value = [element.defaultValue];
+          }
+          valueSet[element.field] = value;
+          break;
         case FormItemType.checkboxType:
           List value = [];
           if(element.defaultValue is List) {
@@ -137,6 +156,8 @@ class FormUtil {
         }catch(e) {
           return 0;
         }
+      case FormItemType.radioType:
+        return (valueSet[item.field] as List).first;
       case FormItemType.checkboxType:
         List ret = [];
         (valueSet[item.field] as List).forEach((element) {
@@ -162,6 +183,9 @@ class FormUtil {
 
           case FormItemType.doubleType:
             (valueSet[fi.field] as TextEditingController).value = TextEditingValue(text: "$value");
+            break;
+          case FormItemType.radioType:
+            valueSet[key] = [value];
             break;
           case FormItemType.checkboxType:
             List ret = [];
@@ -380,8 +404,9 @@ class FormUtil {
             ],
           ),
         );
+      case FormItemType.radioType:
       case FormItemType.checkboxType:
-        var text = ((fi.option["checkboxOptions"] ?? []) as List<CheckboxKitOption>).where((element) => (valueSet[fi.field] as List).contains(element.value)).map((e) => e.label).toList().join(",");
+        var text = ((fi.option[checkboxOptions] ?? []) as List<CheckboxKitOption>).where((element) => (valueSet[fi.field] as List).contains(element.value)).map((e) => e.label).toList().join(",");
         return Container(
           height: 56,
           decoration: BoxDecoration(
@@ -399,6 +424,7 @@ class FormUtil {
                   onTap: () => _showCheckboxDialog(context, fi.title ?? "", CheckboxKit(
                     value: valueSet[fi.field],
                     checks: fi.option["checkboxOptions"] ?? [],
+                    unique: fi.type == FormItemType.radioType,
                     change: (List val) {
                       valueSet[fi.field] = val;
                       onChange(field: fi.field);

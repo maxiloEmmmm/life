@@ -23,6 +23,7 @@ ${ThingClient.dbSchema},
         NgrokClient.dbSchema,
         PlanClient.dbSchema,
         AwardClient.dbSchema,
+        ...AwardClient.dbEdgeSchemas,
         ThingClient.dbSchema
       ],
     }, inDev: true);
