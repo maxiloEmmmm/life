@@ -43,9 +43,12 @@ class _AddState extends State<Add> {
 
         AppDB appDB = await Application.instance!.make("app_db");
 
-        map2DB(data.data);
         if(widget.identity == 0) {
           data.data[PlanClient.createdAtField] = DateTime.now();
+        }
+
+        map2DB(data.data);
+        if(widget.identity == 0) {
           await appDB.planClient.insert(PlanJSONHelp.fromJson(data.data));
         }else {
           await appDB.planClient.update(widget.identity, PlanJSONHelp.fromJson(data.data));

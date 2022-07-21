@@ -16,8 +16,8 @@ class appConfig {
       "db_schema": '''
 ${NgrokClient.dbSchema}
 ${PlanClient.dbSchema}
-${AwardClient.dbSchema},
-${ThingClient.dbSchema},
+${AwardClient.dbSchema}
+${ThingClient.dbSchema}
 ''',
       "db_migrate": [
         NgrokClient.dbSchema,

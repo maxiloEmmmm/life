@@ -106,9 +106,12 @@ class AwardClient {
 
   static const dbEdgeSchemas = [
     '''create table if not exists Award_Plan (
-    Award_id INTEGER PRIMARY KEY,
+    Award_id INTEGER,
     Plan_id INTEGER
   );
+''',
+    '''CREATE INDEX Award_index
+ON Award_Plan (Award_id);
 '''
   ];
 }
