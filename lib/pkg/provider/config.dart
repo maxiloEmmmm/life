@@ -19,13 +19,7 @@ ${PlanClient.dbSchema}
 ${AwardClient.dbSchema}
 ${ThingClient.dbSchema}
 ''',
-      "db_migrate": [
-        NgrokClient.dbSchema,
-        PlanClient.dbSchema,
-        AwardClient.dbSchema,
-        ...AwardClient.dbEdgeSchemas,
-        ThingClient.dbSchema
-      ],
+      "db_migrate": [],
     }, inDev: true);
   }
 }

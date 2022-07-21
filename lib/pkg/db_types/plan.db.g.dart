@@ -15,6 +15,20 @@ class PlanClient {
   Database db;
   PlanClient(this.db);
 
+  Future<List<PlanDetail>?> getPlanDetails(int identity) async {
+    return (await db
+            .rawQuery("select * from PlanDetail where Plan_id = ?", [identity]))
+        .map((e) => PlanDetailJSONHelp.fromJson(e))
+        .toList();
+  }
+
+  Future<List<Award>?> getAwards(int identity) async {
+    return (await db
+            .rawQuery("select * from Award where Plan_id = ?", [identity]))
+        .map((e) => AwardJSONHelp.fromJson(e))
+        .toList();
+  }
+
   Future<List<Plan>> all() async {
     return (await db.rawQuery("select * from $dbTable"))
         .map((e) => PlanJSONHelp.fromJson(e))
@@ -55,8 +69,10 @@ class PlanClient {
   static const descField = "desc";
   static const deadLineField = "deadLine";
   static const createdAtField = "createdAt";
+  static const finishAtField = "finishAt";
   static const jointField = "joint";
   static const jointCountField = "jointCount";
+  static const finishField = "finish";
   static const dbTable = "Plan";
   static const dbSchema = '''
   create table if not exists $dbTable (
@@ -65,11 +81,12 @@ class PlanClient {
     $descField TEXT,
     $deadLineField INTEGER,
     $createdAtField INTEGER,
+    $finishAtField INTEGER,
     $jointField INTEGER,
-    $jointCountField INTEGER
+    $jointCountField INTEGER,
+    $finishField INTEGER
   
   );
+  
 ''';
-
-  static const dbEdgeSchemas = [];
 }

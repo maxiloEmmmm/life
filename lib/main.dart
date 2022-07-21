@@ -19,13 +19,13 @@ void main() {
   route.add('/', () => Index());
   route.add('/plan', () => const Plan());
   route.add('/plan/add', () => plan_add.Add(0));
-  route.add('/plan/update/:id', (Map data) => plan_add.Add(data["id"]));
+  route.add('/plan/update/:id', (Map data) => plan_add.Add(int.parse(data["id"])));
   route.add('/ngrok', () => const Ngrok());
   route.add('/ngrok/add', () => ngrok_add.Add(""));
   route.add('/ngrok/update/:id', (Map data) => ngrok_add.Add(data["id"]));
   route.add('/thing', () => const ThingView());
   route.add('/thing/add', () => thing_add.Add(0));
-  route.add('/thing/update/:id', (Map data) => thing_add.Add(data["id"]));
+  route.add('/thing/update/:id', (Map data) => thing_add.Add(int.parse(data["id"])));
   route.add('/award', () => const AwardView());
   route.add('/award/add', () => award_add.Add(0));
   route.add('/award/update/:id', (Map data) => award_add.Add(int.parse(data["id"])));

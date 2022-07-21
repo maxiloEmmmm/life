@@ -21,7 +21,7 @@ class CheckboxKitItem extends StatefulWidget {
     this.defaultCheck = false,
     this.desc = "",
     required this.label
-  });
+  }):super(key: UniqueKey());
 
   @override
   State<CheckboxKitItem> createState() => _CheckboxKitItemState();

@@ -15,6 +15,13 @@ class ThingClient {
   Database db;
   ThingClient(this.db);
 
+  Future<List<Award>?> getAwards(int identity) async {
+    return (await db
+            .rawQuery("select * from Award where Thing_id = ?", [identity]))
+        .map((e) => AwardJSONHelp.fromJson(e))
+        .toList();
+  }
+
   Future<List<Thing>> all() async {
     return (await db.rawQuery("select * from $dbTable"))
         .map((e) => ThingJSONHelp.fromJson(e))
@@ -61,7 +68,6 @@ class ThingClient {
     $descField TEXT
   
   );
+  
 ''';
-
-  static const dbEdgeSchemas = [];
 }

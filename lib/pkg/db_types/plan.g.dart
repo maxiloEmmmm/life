@@ -15,9 +15,13 @@ Plan _$PlanFromJson(Map<String, dynamic> json) => Plan(
       deadLine: json['deadLine'] == null
           ? null
           : DateTime.parse(json['deadLine'] as String),
-    )..createdAt = json['createdAt'] == null
-        ? null
-        : DateTime.parse(json['createdAt'] as String);
+    )
+      ..createdAt = json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String)
+      ..finishAt = json['finishAt'] == null
+          ? null
+          : DateTime.parse(json['finishAt'] as String);
 
 Map<String, dynamic> _$PlanToJson(Plan instance) {
   final val = <String, dynamic>{};
@@ -33,6 +37,7 @@ Map<String, dynamic> _$PlanToJson(Plan instance) {
   writeNotNull('desc', instance.desc);
   writeNotNull('deadLine', instance.deadLine?.toIso8601String());
   writeNotNull('createdAt', instance.createdAt?.toIso8601String());
+  writeNotNull('finishAt', instance.finishAt?.toIso8601String());
   writeNotNull('joint', instance.joint);
   writeNotNull('jointCount', instance.jointCount);
   return val;

@@ -60,7 +60,6 @@ class NgrokClient {
     $apiKeyField TEXT
   
   );
+  
 ''';
-
-  static const dbEdgeSchemas = [];
 }

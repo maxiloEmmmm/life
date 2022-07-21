@@ -102,16 +102,13 @@ class AwardClient {
     $descField TEXT
   
   );
-''';
-
-  static const dbEdgeSchemas = [
-    '''create table if not exists Award_Plan (
+  create table if not exists Award_Plan (
     Award_id INTEGER,
     Plan_id INTEGER
   );
-''',
-    '''CREATE INDEX Award_index
+
+CREATE INDEX Award_index
 ON Award_Plan (Award_id);
-'''
-  ];
+
+''';
 }
