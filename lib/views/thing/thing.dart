@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/db_types/thing.dart';
 import 'package:focus/pkg/provider/db.dart';
+import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:focus/pkg/component/item.dart';
 
@@ -24,12 +25,12 @@ class _ThingViewState extends State<ThingView> {
   }
 
   Future<List<Thing>?>? fetchFunction() async {
-      try {
-        AppDB appDB = await Application.instance!.make("app_db");
-        return await appDB.thingClient.all();
-      }catch(e) {
-        return null;
-      }
+    try {
+      AppDB appDB = await Application.instance!.make("app_db");
+      return await appDB.thingClient.all();
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> fetch() async {
@@ -45,9 +46,10 @@ class _ThingViewState extends State<ThingView> {
     return FutureBuilder<List<Thing>?>(
       future: _fetch,
       builder: (context, snapshot) {
-        if(snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
+        if (snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.done) {
           return view(context, snapshot.data);
-        }else {
+        } else {
           return const CupertinoActivityIndicator();
         }
       },
@@ -63,49 +65,57 @@ class _ThingViewState extends State<ThingView> {
             icon: const Icon(Icons.add_box),
             onPressed: () {
               Navigator.pushNamed(context, "/thing/add")
-                .then((value) => fetch());
+                  .then((value) => fetch());
             },
           )
         ],
-
       ),
       body: RefreshIndicator(
         onRefresh: () => fetch(),
         child: Container(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
           color: Colors.grey[150],
-          child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item<Thing>(
-            type: "Plan",
-            title: (Thing p) {
-              return p.name!;
-            }, 
-            onRemove: (Thing p) async {
-              AppDB appDB = await Application.instance!.make("app_db");
-              await appDB.thingClient.delete(p.id);
-              fetch();
-            },
-            onUpdate: (Thing p, Function() refresh) async {
-              Navigator.pushNamed(context, "/thing/update/${p.id}")
-                .then((value) => refresh());
-            },
-            fetch: () async {
-              AppDB appDB = await Application.instance!.make("app_db");
-              return (await appDB.thingClient.first(e.id))!;
-            },
-            content: (BuildContext context, Thing? p) {
-              return Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: p == null ? [
-                      const Text("错误了")
-                    ] : [
-                      Text(p.desc!),
-                    ],
-                  )
-                ],
-              );
-            })).toList()),
+          child: ListView(
+              shrinkWrap: true,
+              children: ifs!
+                  .map((e) => Item<Thing>( type: "Plan",
+                      title: (Thing p) {
+                        return p.name!;
+                      },
+                      onRemove: (Thing p) async {
+                        AppDB appDB =
+                            await Application.instance!.make("app_db");
+                        if (await appDB.thingClient.existAward(p.id!)) {
+                          tip.TextAlertDesc(context, "存在奖励记录");
+                          return;
+                        }
+                        await appDB.thingClient.delete(p.id);
+                        fetch();
+                      },
+                      onUpdate: (Thing p, Function() refresh) async {
+                        Navigator.pushNamed(context, "/thing/update/${p.id}")
+                            .then((value) => refresh());
+                      },
+                      fetch: () async {
+                        AppDB appDB =
+                            await Application.instance!.make("app_db");
+                        return (await appDB.thingClient.first(e.id))!;
+                      },
+                      content: (BuildContext context, Thing? p) {
+                        return Row(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: p == null
+                                  ? [const Text("错误了")]
+                                  : [
+                                      Text(p.desc!),
+                                    ],
+                            )
+                          ],
+                        );
+                      }))
+                  .toList()),
         ),
       ),
     );

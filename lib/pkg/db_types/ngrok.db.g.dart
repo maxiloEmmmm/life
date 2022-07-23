@@ -6,60 +6,90 @@
 
 part of 'ngrok.dart';
 
-class NgrokJSONHelp {
-  static Ngrok fromJson(Map<String, dynamic> json) => _$NgrokFromJson(json);
-  static Map<String, dynamic> toJson(Ngrok obj) => _$NgrokToJson(obj);
-}
-
 class NgrokClient {
   Database db;
   NgrokClient(this.db);
 
-  Future<List<Ngrok>> all() async {
-    return (await db.rawQuery("select * from $dbTable"))
-        .map((e) => NgrokJSONHelp.fromJson(e))
+  Future<List<NgrokType>> all() async {
+    return (await db.rawQuery("select * from $table"))
+        .map((e) => NgrokType.fromMap(e))
         .toList();
   }
 
-  Future<int> insert(Ngrok obj) async {
-    return await db.insert(dbTable, NgrokJSONHelp.toJson(obj));
+  Future<List<NgrokType>> query(String sub, [List<Object?>? arguments]) async {
+    return (await db.rawQuery("select * from $table $sub", arguments))
+        .map((e) => NgrokType.fromMap(e))
+        .toList();
+  }
+
+  Future<int> insert(NgrokType obj) async {
+    return await db.insert(table, obj.toMap());
   }
 
   Future<int> updateWhere(
-      Ngrok obj, String? where, List<Object?>? whereArgs) async {
-    return await db.update(dbTable, NgrokJSONHelp.toJson(obj),
+      NgrokType obj, String? where, List<Object?>? whereArgs) async {
+    return await db.update(table, obj.toMap(),
         where: where, whereArgs: whereArgs);
   }
 
-  Future<int> delete(String? identity) async {
-    return await db
-        .rawDelete("delete from $dbTable where $identityField = ?", [identity]);
+  static const idField = "id";
+  static const identityField = "identity";
+  static const apiKeyField = "apiKey";
+  static const table = "Ngrok";
+  static const schema = '''
+create table if not exists Ngrok (
+  id INTEGER PRIMARY KEY AUTOINCREMENT 
+identity text   
+apiKey text   
+);
+
+''';
+}
+
+class NgrokType {
+  int? id;
+  String? identity;
+  String? apiKey;
+
+  NgrokType({this.id, this.identity, this.apiKey});
+
+  // idea from JsonSerializableGenerator
+  NgrokType.fromMap(Map data) {
+    id = data["id"] as int?;
+    identity = data["identity"] as String?;
+    apiKey = data["apiKey"] as String?;
   }
 
-  Future<int> update(String? identity, Ngrok obj) async {
-    return await updateWhere(obj, "$identityField = ?", [identity]);
-  }
+  // idea from JsonSerializableGenerator
+  Map<String, Object?> toMap() {
+    final val = <String, Object?>{};
 
-  Future<Ngrok?> first(String? identity) async {
-    //ignore more rows
-    var rows = await db.rawQuery(
-        "select * from $dbTable where $identityField = ? limit 1", [identity]);
-    if (rows.isEmpty) {
-      return null;
+    void writeNotNull(String key, dynamic value) {
+      if (value != null) {
+        val[key] = value;
+      }
     }
 
-    return NgrokJSONHelp.fromJson(rows[0]);
-  }
+    writeNotNull('id', id);
+    writeNotNull('identity', identity);
+    writeNotNull('apiKey', apiKey);
 
-  static const identityField = "identity";
-  static const apiKeyField = "api_key";
-  static const dbTable = "Ngrok";
-  static const dbSchema = '''
-  create table if not exists $dbTable (
-    $identityField TEXT PRIMARY KEY ,
-    $apiKeyField TEXT
-  
-  );
-  
-''';
+    return val;
+  }
+}
+
+String dateTime2String(DateTime data) {
+  return data.toIso8601String();
+}
+
+DateTime string2DateTime(String data) {
+  return DateTime.parse(data);
+}
+
+int bool2Int(bool data) {
+  return data ? 0 : 1;
+}
+
+bool int2Bool(int data) {
+  return data == 0;
 }

@@ -6,7 +6,6 @@ import 'package:focus/pkg/db_types/plan.dart' as db_plan;
 import 'package:focus/pkg/provider/db.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
-import 'package:sprintf/sprintf.dart';
 import 'package:focus/pkg/component/item.dart';
 
 class Plan extends StatefulWidget {
@@ -28,7 +27,9 @@ class _PlanState extends State<Plan> {
   Future<List<db_plan.Plan>?>? fetchFunction() async {
     try {
       AppDB appDB = await Application.instance!.make("app_db");
-      return await appDB.planClient.all();
+      var rs = await appDB.planClient.all();
+      rs.sort((a, b) => !a.finish || !b.finish ? 1 : -1);
+      return rs;
     } catch (e) {
       return null;
     }
@@ -79,20 +80,23 @@ class _PlanState extends State<Plan> {
           child: ListView(
               shrinkWrap: true,
               children: ifs!
-                  .map((e) => Item<db_plan.Plan>(
-                        type: "Plan",
+                  .map((e) => Item<db_plan.Plan>(type: "Plan",
                         title: (db_plan.Plan p) {
                           return p.name!;
                         },
                         onRemove: (db_plan.Plan p) async {
                           AppDB appDB =
                               await Application.instance!.make("app_db");
+                          if (await appDB.planClient.existAward(p.id!)) {
+                            tip.TextAlertDesc(context, "存在奖励记录");
+                            return;
+                          }
                           await appDB.planClient.delete(p.id);
                           fetch();
                         },
                         onUpdate: (db_plan.Plan p, Function() refresh) async {
                           Navigator.pushNamed(context, "/plan/update/${p.id}")
-                              .then((value) => refresh());
+                              .then((value) => fetch());
                         },
                         fetch: () async {
                           AppDB appDB =
@@ -135,9 +139,8 @@ class _PlanState extends State<Plan> {
                                 if (target == jc) {
                                   pp.finishAt = DateTime.now();
                                 }
-                                await appDB.planClient
-                                    .update(p.id, pp);
-                                refresh();
+                                await appDB.planClient.update(p.id, pp);
+                                fetch();
                               },
                               icon: const Icon(Icons.plus_one)),
                         ],

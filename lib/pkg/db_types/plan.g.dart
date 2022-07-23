@@ -6,22 +6,21 @@ part of 'plan.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Plan _$PlanFromJson(Map<String, dynamic> json) => Plan(
-      id: json['id'] as int?,
-      name: json['name'] as String?,
-      desc: json['desc'] as String?,
-      joint: json['joint'] as int?,
-      jointCount: json['jointCount'] as int?,
-      deadLine: json['deadLine'] == null
-          ? null
-          : DateTime.parse(json['deadLine'] as String),
-    )
-      ..createdAt = json['createdAt'] == null
-          ? null
-          : DateTime.parse(json['createdAt'] as String)
-      ..finishAt = json['finishAt'] == null
-          ? null
-          : DateTime.parse(json['finishAt'] as String);
+Plan _$PlanFromJson(Map<String, dynamic> json) => Plan()
+  ..id = json['id'] as int?
+  ..name = json['name'] as String?
+  ..desc = json['desc'] as String?
+  ..deadLine = json['deadLine'] == null
+      ? null
+      : DateTime.parse(json['deadLine'] as String)
+  ..createdAt = json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String)
+  ..finishAt = json['finishAt'] == null
+      ? null
+      : DateTime.parse(json['finishAt'] as String)
+  ..joint = json['joint'] as int?
+  ..jointCount = json['jointCount'] as int?;
 
 Map<String, dynamic> _$PlanToJson(Plan instance) {
   final val = <String, dynamic>{};

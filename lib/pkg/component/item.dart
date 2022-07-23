@@ -6,10 +6,7 @@ import 'package:sprintf/sprintf.dart';
 class ItemAction<T> {
   Widget icon;
   Function(T?, void Function() refresh) cb;
-  ItemAction({
-    required this.icon,
-    required this.cb
-  });
+  ItemAction({required this.icon, required this.cb});
 }
 
 class Item<T> extends StatefulWidget {
@@ -20,15 +17,13 @@ class Item<T> extends StatefulWidget {
   Function(T, void Function() refresh)? onUpdate;
   Future<T?> Function() fetch;
   Widget Function(BuildContext, T?) content;
-  Item({
-    required this.type,
-    required this.fetch,
-    required this.content,
-    this.title,
-    this.onRemove,
-    this.onUpdate,
-    this.actions
-  });
+  Item({required this.type,
+      required this.fetch,
+      required this.content,
+      this.title,
+      this.onRemove,
+      this.onUpdate,
+      this.actions});
 
   @override
   State<Item> createState() => _ItemState<T>();
@@ -58,59 +53,63 @@ class _ItemState<T> extends State<Item<T>> {
     return FutureBuilder<T>(
       future: _fetch,
       builder: (context, snapshot) {
-          List<Widget> sBtn = [];
-          if(snapshot.data != null) {
-            sBtn.addAll([
-              SlidableAction(
-                  onPressed: (BuildContext context) {
-                    if(widget.onRemove != null) {
-                      widget.onRemove!(snapshot.data!);
-                    }
-                  },
-                  backgroundColor: Color(0xFFFE4A49),
-                  foregroundColor: Colors.white,
-                  icon: Icons.delete,
-                  label: '干掉',
-                ),
-                SlidableAction(
-                  onPressed: (BuildContext context) {
-                    if(widget.onUpdate != null) {
-                      widget.onUpdate!(snapshot.data!, doFetch);
-                    }
-                  },
-                  backgroundColor: Colors.blue.shade200,
-                  foregroundColor: Colors.white,
-                  icon: Icons.update,
-                  label: '改变',
-                ),
-            ]);
-          }
-
-          return Slidable(
-            endActionPane: ActionPane(
-              motion: const ScrollMotion(),
-              children: sBtn,
+        List<Widget> sBtn = [];
+        if (snapshot.data != null) {
+          sBtn.addAll([
+            SlidableAction(
+              onPressed: (BuildContext context) {
+                if (widget.onRemove != null) {
+                  widget.onRemove!(snapshot.data!);
+                }
+              },
+              backgroundColor: Color(0xFFFE4A49),
+              foregroundColor: Colors.white,
+              icon: Icons.delete,
+              label: '干掉',
             ),
-            child: view(context, snapshot.data, snapshot.connectionState != ConnectionState.done),
-          );
+            SlidableAction(
+              onPressed: (BuildContext context) {
+                if (widget.onUpdate != null) {
+                  widget.onUpdate!(snapshot.data!, doFetch);
+                }
+              },
+              backgroundColor: Colors.blue.shade200,
+              foregroundColor: Colors.white,
+              icon: Icons.update,
+              label: '改变',
+            ),
+          ]);
+        }
+
+        return Slidable(
+          endActionPane: ActionPane(
+            motion: const ScrollMotion(),
+            children: sBtn,
+          ),
+          child: view(context, snapshot.data,
+              snapshot.connectionState != ConnectionState.done),
+        );
       },
     );
   }
 
   Widget view(BuildContext context, T? ii, bool loading) {
     List<Widget> btns = [];
-    
-    if(loading) {
-      btns.add(Container(child: const CupertinoActivityIndicator(), padding: EdgeInsets.all(12)));
-    }else {
+
+    if (loading) {
+      btns.add(Container(
+          child: const CupertinoActivityIndicator(),
+          padding: EdgeInsets.all(12)));
+    } else {
       widget.actions?.forEach((e) {
         btns.add(IconButton(onPressed: () => e.cb(ii, doFetch), icon: e.icon));
       });
-      btns.add(IconButton(onPressed: () => doFetch(), icon: const Icon(Icons.refresh)));
+      btns.add(IconButton(
+          onPressed: () => doFetch(), icon: const Icon(Icons.refresh)));
     }
 
     String title = "-";
-    if(widget.title != null && ii != null) {
+    if (widget.title != null && ii != null) {
       title = widget.title!(ii);
     }
 
@@ -132,8 +131,8 @@ class _ItemState<T> extends State<Item<T>> {
                     left: 0,
                     top: -20,
                     child: Container(
-                      child:
-                          Text(widget.type, style: TextStyle(color: Colors.white)),
+                      child: Text(widget.type,
+                          style: TextStyle(color: Colors.white)),
                       color: Colors.orange,
                       padding: EdgeInsets.all(2),
                     )),

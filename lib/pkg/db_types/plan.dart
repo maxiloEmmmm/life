@@ -11,7 +11,7 @@ part 'plan.db.g.dart';
 
 @JsonSerializable(includeIfNull: false, converters: [Bool2Int()])
 @DBAnnotation(edges: [
-  DBEdge(relation: "PlanDetail", belong: true),
+  DBEdge(relation: "PlanDetail"),
   DBEdge(relation: "Award", belong: true),
 ])
 class Plan {
@@ -29,12 +29,4 @@ class Plan {
   int? jointCount;
 
   bool get finish => joint == jointCount;
-
-  Plan(
-      {this.id,
-      this.name,
-      this.desc,
-      this.joint,
-      this.jointCount,
-      this.deadLine});
 }
