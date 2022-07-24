@@ -2,8 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:focus/pkg/db_types/thing.dart';
-import 'package:focus/pkg/provider/db.dart';
+import 'package:focus/pkg/db_types/db.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:focus/pkg/component/item.dart';
@@ -16,7 +15,7 @@ class ThingView extends StatefulWidget {
 }
 
 class _ThingViewState extends State<ThingView> {
-  List<Thing> ifs = [];
+  List<ThingType> ifs = [];
 
   @override
   void initState() {
@@ -24,10 +23,10 @@ class _ThingViewState extends State<ThingView> {
     fetch();
   }
 
-  Future<List<Thing>?>? fetchFunction() async {
+  Future<List<ThingType>?>? fetchFunction() async {
     try {
-      AppDB appDB = await Application.instance!.make("app_db");
-      return await appDB.thingClient.all();
+      DBClientSet appDB = await Application.instance!.make("app_db");
+      return await appDB.Thing().all();
     } catch (e) {
       return null;
     }
@@ -39,11 +38,11 @@ class _ThingViewState extends State<ThingView> {
     });
   }
 
-  Future<List<Thing>?>? _fetch;
+  Future<List<ThingType>?>? _fetch;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Thing>?>(
+    return FutureBuilder<List<ThingType>?>(
       future: _fetch,
       builder: (context, snapshot) {
         if (snapshot.hasData &&
@@ -56,7 +55,7 @@ class _ThingViewState extends State<ThingView> {
     );
   }
 
-  Widget view(BuildContext context, List<Thing>? ifs) {
+  Widget view(BuildContext context, List<ThingType>? ifs) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Thing'),
@@ -78,30 +77,30 @@ class _ThingViewState extends State<ThingView> {
           child: ListView(
               shrinkWrap: true,
               children: ifs!
-                  .map((e) => Item<Thing>( type: "Plan",
-                      title: (Thing p) {
+                  .map((e) => Item<ThingType>( type: "Plan",
+                      title: (ThingType p) {
                         return p.name!;
                       },
-                      onRemove: (Thing p) async {
-                        AppDB appDB =
+                      onRemove: (ThingType p) async {
+                        DBClientSet appDB =
                             await Application.instance!.make("app_db");
-                        if (await appDB.thingClient.existAward(p.id!)) {
+                        if ((await p.queryAward()).isNotEmpty) {
                           tip.TextAlertDesc(context, "存在奖励记录");
                           return;
                         }
-                        await appDB.thingClient.delete(p.id);
+                        await p.destory();
                         fetch();
                       },
-                      onUpdate: (Thing p, Function() refresh) async {
+                      onUpdate: (ThingType p, Function() refresh) async {
                         Navigator.pushNamed(context, "/thing/update/${p.id}")
                             .then((value) => refresh());
                       },
                       fetch: () async {
-                        AppDB appDB =
+                        DBClientSet appDB =
                             await Application.instance!.make("app_db");
-                        return (await appDB.thingClient.first(e.id))!;
+                        return (await appDB.Thing().first(e.id!))!;
                       },
-                      content: (BuildContext context, Thing? p) {
+                      content: (BuildContext context, ThingType? p) {
                         return Row(
                           children: [
                             Column(

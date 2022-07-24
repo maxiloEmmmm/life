@@ -2,8 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:focus/pkg/db_types/plan.dart' as db_plan;
-import 'package:focus/pkg/provider/db.dart';
+import 'package:focus/pkg/db_types/db.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:focus/pkg/component/item.dart';
@@ -16,7 +15,7 @@ class Plan extends StatefulWidget {
 }
 
 class _PlanState extends State<Plan> {
-  List<db_plan.Plan> ifs = [];
+  List<PlanType> ifs = [];
 
   @override
   void initState() {
@@ -24,11 +23,17 @@ class _PlanState extends State<Plan> {
     fetch();
   }
 
-  Future<List<db_plan.Plan>?>? fetchFunction() async {
+  Future<List<PlanType>?>? fetchFunction() async {
     try {
-      AppDB appDB = await Application.instance!.make("app_db");
-      var rs = await appDB.planClient.all();
-      rs.sort((a, b) => !a.finish || !b.finish ? 1 : -1);
+      DBClientSet appDB = await Application.instance!.make("app_db");
+      var rs = await appDB.Plan().all();
+      rs.sort((a, b) {
+        if (!a.finish && !b.finish) {
+          return a.id! < b.id! ? 1 : -1;
+        }
+
+        return a.finish ? 1 : -1;
+      });
       return rs;
     } catch (e) {
       return null;
@@ -41,11 +46,11 @@ class _PlanState extends State<Plan> {
     });
   }
 
-  Future<List<db_plan.Plan>?>? _fetch;
+  Future<List<PlanType>?>? _fetch;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<db_plan.Plan>?>(
+    return FutureBuilder<List<PlanType>?>(
       future: _fetch,
       builder: (context, snapshot) {
         if (snapshot.hasData &&
@@ -58,7 +63,7 @@ class _PlanState extends State<Plan> {
     );
   }
 
-  Widget view(BuildContext context, List<db_plan.Plan>? ifs) {
+  Widget view(BuildContext context, List<PlanType>? ifs) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Plan'),
@@ -80,30 +85,31 @@ class _PlanState extends State<Plan> {
           child: ListView(
               shrinkWrap: true,
               children: ifs!
-                  .map((e) => Item<db_plan.Plan>(type: "Plan",
-                        title: (db_plan.Plan p) {
+                  .map((e) => Item<PlanType>(
+                        type: "Plan",
+                        title: (PlanType p) {
                           return p.name!;
                         },
-                        onRemove: (db_plan.Plan p) async {
-                          AppDB appDB =
+                        onRemove: (PlanType p) async {
+                          DBClientSet appDB =
                               await Application.instance!.make("app_db");
-                          if (await appDB.planClient.existAward(p.id!)) {
+                          if ((await p.queryAward()).isNotEmpty) {
                             tip.TextAlertDesc(context, "存在奖励记录");
                             return;
                           }
-                          await appDB.planClient.delete(p.id);
+                          await appDB.Plan().delete(p.id!);
                           fetch();
                         },
-                        onUpdate: (db_plan.Plan p, Function() refresh) async {
+                        onUpdate: (PlanType p, Function() refresh) async {
                           Navigator.pushNamed(context, "/plan/update/${p.id}")
                               .then((value) => fetch());
                         },
                         fetch: () async {
-                          AppDB appDB =
+                          DBClientSet appDB =
                               await Application.instance!.make("app_db");
-                          return (await appDB.planClient.first(e.id))!;
+                          return (await appDB.Plan().first(e.id!))!;
                         },
-                        content: (BuildContext context, db_plan.Plan? p) {
+                        content: (BuildContext context, PlanType? p) {
                           return Row(
                             children: [
                               Column(
@@ -124,9 +130,9 @@ class _PlanState extends State<Plan> {
                           );
                         },
                         actions: [
-                          ItemAction<db_plan.Plan>(
-                              cb: (db_plan.Plan? p, Function() refresh) async {
-                                AppDB appDB =
+                          ItemAction<PlanType>(
+                              cb: (PlanType? p, Function() refresh) async {
+                                DBClientSet appDB =
                                     await Application.instance!.make("app_db");
                                 var target = (p!.joint ?? 0) + 1;
                                 var jc = p.jointCount ?? 0;
@@ -135,11 +141,11 @@ class _PlanState extends State<Plan> {
                                   return;
                                 }
 
-                                var pp = db_plan.Plan(joint: target);
+                                p.joint = target;
                                 if (target == jc) {
-                                  pp.finishAt = DateTime.now();
+                                  p.finishAt = DateTime.now();
                                 }
-                                await appDB.planClient.update(p.id, pp);
+                                await p.save();
                                 fetch();
                               },
                               icon: const Icon(Icons.plus_one)),

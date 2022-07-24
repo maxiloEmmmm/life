@@ -1,8 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:focus/pkg/db_types/db.dart' as ngrok_db;
+import 'package:focus/pkg/db_types/db.dart';
 import 'package:focus/pkg/fetch/ngrok.dart' as ngrok_sdk;
-import 'package:focus/pkg/provider/db.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:sprintf/sprintf.dart';
@@ -16,7 +15,7 @@ class Ngrok extends StatefulWidget {
 }
 
 class _NgrokState extends State<Ngrok> {
-  List<ngrok_db.Ngrok> ns = [];
+  List<NgrokType> ns = [];
 
   //2Bk4TjVjGYgW443S5vCbcdGlrWN_5dqQ3WV4GF6wkkBuaXM9y
   //2BneJIDZFnV6PaUxTvmgZfxjlL6_2ku2y3yn41wdZzJTVc8vG
@@ -31,8 +30,8 @@ class _NgrokState extends State<Ngrok> {
     setState(() {
       _fetch = () async {
         try {
-          AppDB appDB = await Application.instance!.make("app_db");
-          var ngroks = await appDB.ngrokClient.all();
+          DBClientSet appDB = await Application.instance!.make("app_db");
+          var ngroks = await appDB.Ngrok().all();
           return ngroks;
           // return ngroks.map((e) => NgrokFetch(
           //   e.identity ?? "", e.apiKey ?? "",
@@ -55,11 +54,11 @@ class _NgrokState extends State<Ngrok> {
     });
   }
 
-  Future<List<ngrok_db.Ngrok>?>? _fetch;
+  Future<List<NgrokType>?>? _fetch;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<ngrok_db.Ngrok>?>(
+    return FutureBuilder<List<NgrokType>?>(
       future: _fetch,
       builder: (context, snapshot) {
         if (snapshot.hasData &&
@@ -72,7 +71,7 @@ class _NgrokState extends State<Ngrok> {
     );
   }
 
-  Widget view(BuildContext context, List<ngrok_db.Ngrok>? ifs) {
+  Widget view(BuildContext context, List<NgrokType>? ifs) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ngrok'),
@@ -96,10 +95,9 @@ class _NgrokState extends State<Ngrok> {
                     type: "Ngrok",
                     onRemove: (NgrokItem item) async {
                       try {
-                        AppDB appDB =
+                        DBClientSet appDB =
                             await Application.instance!.make("app_db");
-                        if ((await appDB.ngrokClient
-                                .delete(item.ng.identity)) ==
+                        if ((await appDB.Ngrok().delete(item.ng.id!)) ==
                             1) {
                           tip.TextAlertDescWithCB(context, "成功", () => fetch());
                           return;
@@ -114,7 +112,7 @@ class _NgrokState extends State<Ngrok> {
                     },
                     onUpdate: (NgrokItem item, Function() refresh) async {
                       Navigator.pushNamed(
-                              context, "/ngrok/update/${item.ng.identity}")
+                              context, "/ngrok/update/${item.ng.id}")
                           .then((value) => refresh());
                     },
                     title: (NgrokItem item) {
@@ -166,7 +164,7 @@ class _NgrokState extends State<Ngrok> {
 }
 
 class NgrokItem {
-  ngrok_db.Ngrok ng;
+  NgrokType ng;
   List<ngrok_sdk.NgrokAgent> ag = [];
   NgrokItem({
     required this.ng,

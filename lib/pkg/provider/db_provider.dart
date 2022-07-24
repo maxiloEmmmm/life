@@ -11,6 +11,5 @@ class AppDBProvider {
     });
   }
 
-  void boot(Application app) {
-  }
+  void boot(Application app) {}
 }

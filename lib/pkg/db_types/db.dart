@@ -1,7 +1,7 @@
 import "package:maxilozoz_box/modules/storage/sqlite/sqlite.dart";
 import 'package:maxilozoz_box/modules/storage/sqlite/build/annotation.dart';
 part 'db.db.g.dart';
-
+part 'plan.dart';
 @DBSchema(
   fields: [
     DBMetaField(name: "identity"),
@@ -21,23 +21,6 @@ class Ngrok {}
   ],
 )
 class Award {}
-
-@DBSchema(
-  fields: [
-    DBMetaField(name: "name"),
-    DBMetaField(name: "desc"),
-    DBMetaField(name: "createdAt", type: DBFieldType.DateTime),
-    DBMetaField(name: "deadLine", type: DBFieldType.DateTime),
-    DBMetaField(name: "finishAt", type: DBFieldType.DateTime),
-    DBMetaField(name: "joint", type: DBFieldType.Int),
-    DBMetaField(name: "jointCount", type: DBFieldType.Int),
-  ],
-  edges: [
-    DBMetaEdge(table: "Award", type: DBEdgeType.From),
-    DBMetaEdge(table: "PlanDetail", type: DBEdgeType.To),
-  ],
-)
-class Plan {}
 
 @DBSchema(
   fields: [

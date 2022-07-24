@@ -82,17 +82,19 @@ class _AddState extends State<Add> {
             }
 
             DBClientSet appDB = await Application.instance!.make("app_db");
+            await appDB.transaction(() async {
+              var item = appDB.Award().newType();
+              if (widget.identity != 0) {
+                item = (await appDB.Award().first(widget.identity))!;
+              }
 
-            var item = appDB.Award().newType();
-            if (widget.identity != 0) {
-              item = (await appDB.Award().first(widget.identity))!;
-            }
+              await item.fill(data.data).save();
 
-            await item.fill(data.data).save();
-
-            await item.setPlans(
-                (data.data[plansField] as List).map((e) => e as int).toList());
-            await item.setThing(data.data[thingField]);
+              await item.setPlans((data.data[plansField] as List)
+                  .map((e) => e as int)
+                  .toList());
+              await item.setThing(data.data[thingField]);
+            });
 
             tip.TextAlertDescWithCB(
                 context, "一切都好", () => Navigator.pop(context));
