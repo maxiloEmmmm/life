@@ -2,10 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:focus/pkg/db_types/award.dart';
-import 'package:focus/pkg/db_types/plan.dart';
-import 'package:focus/pkg/db_types/thing.dart';
-import 'package:focus/pkg/provider/db.dart';
+import 'package:focus/pkg/db_types/db.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:focus/pkg/component/item.dart';
 
@@ -17,18 +14,15 @@ class AwardView extends StatefulWidget {
 }
 
 class AwardViewItem {
-  Award award;
-  List<Plan> plans;
-  Thing thing;
-  AwardViewItem({
-    required this.award,
-    required this.plans,
-    required this.thing
-  });
+  AwardType award;
+  List<PlanType> plans;
+  ThingType thing;
+  AwardViewItem(
+      {required this.award, required this.plans, required this.thing});
 }
 
 class _AwardViewState extends State<AwardView> {
-  List<Award> ifs = [];
+  List<AwardType> ifs = [];
 
   @override
   void initState() {
@@ -36,38 +30,39 @@ class _AwardViewState extends State<AwardView> {
     fetch();
   }
 
-  Future<List<Award>?>? fetchFunction() async {
-      try {
-        AppDB appDB = await Application.instance!.make("app_db");
-        return await appDB.awardClient.all();
-      }catch(e) {
-        return null;
-      }
+  Future<List<AwardType>?>? fetchFunction() async {
+    try {
+      DBClientSet appDB = await Application.instance!.make("app_db");
+      return await appDB.Award().all();
+    } catch (e) {
+      return null;
+    }
   }
 
-  Future<List<Award>?> fetch() async {
+  Future<List<AwardType>?> fetch() async {
     setState(() {
       _fetch = fetchFunction();
     });
   }
 
-  Future<List<Award>?>? _fetch;
+  Future<List<AwardType>?>? _fetch;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Award>?>(
+    return FutureBuilder<List<AwardType>?>(
       future: _fetch,
       builder: (context, snapshot) {
-        if(snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
+        if (snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.done) {
           return view(context, snapshot.data);
-        }else {
+        } else {
           return const CupertinoActivityIndicator();
         }
       },
     );
   }
 
-  Widget view(BuildContext context, List<Award>? ifs) {
+  Widget view(BuildContext context, List<AwardType>? ifs) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Award'),
@@ -76,55 +71,63 @@ class _AwardViewState extends State<AwardView> {
             icon: const Icon(Icons.add_box),
             onPressed: () {
               Navigator.pushNamed(context, "/award/add")
-                .then((value) => fetch());
+                  .then((value) => fetch());
             },
           )
         ],
-
       ),
       body: RefreshIndicator(
         onRefresh: () => fetch(),
         child: Container(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
           color: Colors.grey[150],
-          child: ListView(shrinkWrap: true, children: ifs!.map((e) => Item<AwardViewItem>(
-            type: "Award",
-            title: (AwardViewItem p) {
-              return p.award.name!;
-            }, 
-            onRemove: (AwardViewItem p) async {
-              AppDB appDB = await Application.instance!.make("app_db");
-              await appDB.awardClient.delete(p.award.id);
-              fetch();
-            },
-            onUpdate: (AwardViewItem p, Function() refresh) async {
-              Navigator.pushNamed(context, "/award/update/${p.award.id}")
-                .then((value) => refresh());
-            },
-            fetch: () async {
-              AppDB appDB = await Application.instance!.make("app_db");
-              return AwardViewItem(
-                award: (await appDB.awardClient.first(e.id))!,
-                plans: await appDB.awardClient.getPlans(e.id!),
-                thing: (await appDB.awardClient.getThing(e.id!))!,
-              );
-            },
-            content: (BuildContext context, AwardViewItem? p) {
-              return Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: p == null ? [
-                      const Text("错误了")
-                    ] : [
-                      Text(p.award.desc!),
-                      Text("plans: ${p.plans.map((e) => e.name).toList().join(",")}"),
-                      Text("award: ${p.thing.name}"),
-                    ],
-                  )
-                ],
-              );
-            })).toList()),
+          child: ListView(
+              shrinkWrap: true,
+              children: ifs!
+                  .map((e) => Item<AwardViewItem>(
+                      type: "Award",
+                      title: (AwardViewItem p) {
+                        return p.award.name!;
+                      },
+                      onRemove: (AwardViewItem p) async {
+                        DBClientSet appDB =
+                            await Application.instance!.make("app_db");
+                        await appDB.Award().delete(p.award.id!);
+                        fetch();
+                      },
+                      onUpdate: (AwardViewItem p, Function() refresh) async {
+                        Navigator.pushNamed(
+                                context, "/award/update/${p.award.id}")
+                            .then((value) => refresh());
+                      },
+                      fetch: () async {
+                        DBClientSet appDB =
+                            await Application.instance!.make("app_db");
+                        var item = (await appDB.Award().first(e.id!))!;
+                        return AwardViewItem(
+                          award: item,
+                          plans: await item.queryPlans(),
+                          thing: (await item.queryThing())!,
+                        );
+                      },
+                      content: (BuildContext context, AwardViewItem? p) {
+                        return Row(
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: p == null
+                                  ? [const Text("错误了")]
+                                  : [
+                                      Text(p.award.desc!),
+                                      Text(
+                                          "plans: ${p.plans.map((e) => e.name).toList().join(",")}"),
+                                      Text("award: ${p.thing.name}"),
+                                    ],
+                            )
+                          ],
+                        );
+                      }))
+                  .toList()),
         ),
       ),
     );

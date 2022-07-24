@@ -1,7 +1,4 @@
-import 'package:focus/pkg/db_types/award.dart';
-import 'package:focus/pkg/db_types/ngrok.dart';
-import 'package:focus/pkg/db_types/plan.dart';
-import 'package:focus/pkg/db_types/thing.dart';
+import 'package:focus/pkg/db_types/db.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/config/config.dart';
 
@@ -13,12 +10,7 @@ class appConfig {
     Config config = app.make("config");
     config.add({
       "db_enable": true,
-      "db_schema": '''
-${NgrokClient.dbSchema}
-${PlanClient.dbSchema}
-${AwardClient.dbSchema}
-${ThingClient.dbSchema}
-''',
+      "db_schema": DBClientSet.schema,
       "db_migrate": [],
     }, inDev: true);
   }

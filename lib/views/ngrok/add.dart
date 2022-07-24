@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:focus/pkg/db_types/ngrok.dart';
+import 'package:focus/pkg/db_types/db.dart';
 import 'package:focus/pkg/provider/db.dart';
 import 'package:focus/pkg/provider/db_provider.dart';
 import 'package:focus/pkg/util/tip.dart';
