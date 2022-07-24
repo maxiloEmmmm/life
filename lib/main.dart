@@ -4,6 +4,7 @@ import 'package:focus/views/award/award.dart';
 import 'package:focus/views/index.dart';
 import 'package:focus/views/ngrok/add.dart' as ngrok_add;
 import 'package:focus/views/plan/add.dart' as plan_add;
+import 'package:focus/views/plan/detail.dart' as plan_detail;
 import 'package:focus/views/thing/add.dart' as thing_add;
 import 'package:focus/views/award/add.dart' as award_add;
 import 'package:focus/views/plan/plan.dart';
@@ -21,6 +22,8 @@ void main() {
   route.add('/plan/add', () => plan_add.Add(0));
   route.add(
       '/plan/update/:id', (Map data) => plan_add.Add(int.parse(data["id"])));
+  route.add('/plan/:id/detail',
+      (Map data) => plan_detail.Detail(int.parse(data["id"])));
   route.add('/ngrok', () => const Ngrok());
   route.add('/ngrok/add', () => ngrok_add.Add(0));
   route.add('/ngrok/update/:id', (Map data) => ngrok_add.Add(data["id"]));

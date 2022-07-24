@@ -146,9 +146,23 @@ class _PlanState extends State<Plan> {
                                   p.finishAt = DateTime.now();
                                 }
                                 await p.save();
+                                await appDB.PlanDetail()
+                                    .newType()
+                                    .fillByType(PlanDetailType(
+                                      hit: target,
+                                      createdAt: DateTime.now(),
+                                    ))
+                                    .setPlan(p.id!)
+                                    .save();
                                 fetch();
                               },
                               icon: const Icon(Icons.plus_one)),
+                          ItemAction<PlanType>(
+                              cb: (PlanType? p, Function() refresh) {
+                                Navigator.pushNamed(
+                                    context, "/plan/${p!.id}/detail");
+                              },
+                              icon: const Icon(Icons.info))
                         ],
                       ))
                   .toList()),

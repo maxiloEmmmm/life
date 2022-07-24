@@ -612,16 +612,17 @@ class PlanDetailType {
   }
 
   Future<PlanType?> queryPlan() async {
-    var rows = await clientSet.Plan().query("where id = ? limit 1", [Plan_ref]);
+    var rows = await clientSet.Plan().query(
+        "select * from ${PlanClient.table} where id = ? limit 1", [Plan_ref]);
     if (rows.isEmpty) {
       return null;
     }
     return rows[0];
   }
 
-  Future<PlanDetailType> setPlan(int idx) async {
+  PlanDetailType setPlan(int idx) {
     Plan_ref = idx;
-    return await save();
+    return this;
   }
 }
 
@@ -1074,7 +1075,8 @@ class PlanType {
   }
 
   Future<List<PlanDetailType>> queryPlanDetails() async {
-    var rows = clientSet.PlanDetail().query("where Plan_ref = ? ", [id]);
+    var rows = clientSet.PlanDetail().query(
+        "select * from ${PlanDetailClient.table} where Plan_ref = ? ", [id]);
     return rows;
   }
 }

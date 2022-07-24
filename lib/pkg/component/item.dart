@@ -17,7 +17,8 @@ class Item<T> extends StatefulWidget {
   Function(T, void Function() refresh)? onUpdate;
   Future<T?> Function() fetch;
   Widget Function(BuildContext, T?) content;
-  Item({required this.type,
+  Item(
+      {required this.type,
       required this.fetch,
       required this.content,
       this.title,
@@ -137,18 +138,18 @@ class _ItemState<T> extends State<Item<T>> {
                       padding: EdgeInsets.all(2),
                     )),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                        flex: 7,
+                    Flexible(
                         child: Container(
-                          padding: const EdgeInsets.only(left: 4),
-                          child: Text(title),
-                          decoration: const BoxDecoration(
-                              border: Border(
-                                  left: BorderSide(
-                                      color: Colors.orange, width: 4))),
-                        )),
+                      padding: const EdgeInsets.only(left: 4),
+                      child: Text(title),
+                      decoration: const BoxDecoration(
+                          border: Border(
+                              left:
+                                  BorderSide(color: Colors.orange, width: 4))),
+                    )),
                     //  todo: add refresh
                     Expanded(
                       flex: 3,
