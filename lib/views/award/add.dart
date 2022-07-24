@@ -83,12 +83,7 @@ class _AddState extends State<Add> {
 
             DBClientSet appDB = await Application.instance!.make("app_db");
             await appDB.transaction(() async {
-              var item = appDB.Award().newType();
-              if (widget.identity != 0) {
-                item = (await appDB.Award().first(widget.identity))!;
-              }
-
-              await item.fill(data.data).save();
+              var item = await (await appDB.Award().firstOrNew(widget.identity)).fill(data.data).save();
 
               await item.setPlans((data.data[plansField] as List)
                   .map((e) => e as int)
