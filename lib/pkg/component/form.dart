@@ -57,7 +57,7 @@ class FormUtil {
   Map<String, bool> validateSet = {};
   Map<String, FormItem> formItemMap = {};
   Function()? change;
-  Function(FormData data)? save;
+  Function(BuildContext context, FormData data)? save;
 
   FormUtil({
     this.title,
@@ -468,7 +468,7 @@ class FormUtil {
                 child: const Text("Done"),
                 onPressed: () async {
                   if(save != null) {
-                    save!(FormData(data: valueMap(), valid: valid, validateMap: validateSet));
+                    save!(context, FormData(data: valueMap(), valid: valid, validateMap: validateSet));
                   }
                 },
               ),

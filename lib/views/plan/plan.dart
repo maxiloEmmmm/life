@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:focus/pkg/component/form.dart';
 import 'package:focus/pkg/db_types/db.dart';
+import 'package:focus/pkg/util/date.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:focus/pkg/component/item.dart';
@@ -14,9 +16,12 @@ class Plan extends StatefulWidget {
   State<Plan> createState() => _PlanState();
 }
 
-class _PlanState extends State<Plan> {
-  List<PlanType> ifs = [];
+class PlanInfo {
+  late PlanType pt;
+  late List<PlanWeek> pw;
+}
 
+class _PlanState extends State<Plan> {
   @override
   void initState() {
     super.initState();
@@ -34,6 +39,7 @@ class _PlanState extends State<Plan> {
 
         return a.finish ? 1 : -1;
       });
+
       return rs;
     } catch (e) {
       return null;
@@ -85,82 +91,108 @@ class _PlanState extends State<Plan> {
           child: ListView(
               shrinkWrap: true,
               children: ifs!
-                  .map((e) => Item<PlanType>(
+                  .map((e) => Item<PlanInfo>(
                         type: "Plan",
-                        title: (PlanType p) {
-                          return p.name!;
+                        title: (PlanInfo p) {
+                          return p.pt.name!;
                         },
-                        onRemove: (PlanType p) async {
+                        onRemove: (PlanInfo p) async {
                           DBClientSet appDB =
                               await Application.instance!.make("app_db");
-                          if ((await p.queryAward()).isNotEmpty) {
+                          if ((await p.pt.queryAward()).isNotEmpty) {
                             tip.TextAlertDesc(context, "存在奖励记录");
                             return;
                           }
-                          await appDB.Plan().delete(p.id!);
+                          await appDB.Plan().delete(p.pt.id!);
                           fetch();
                         },
-                        onUpdate: (PlanType p, Function() refresh) async {
-                          Navigator.pushNamed(context, "/plan/update/${p.id}")
+                        onUpdate: (PlanInfo p, Function() refresh) async {
+                          Navigator.pushNamed(context, "/plan/update/${p.pt.id}")
                               .then((value) => fetch());
                         },
                         fetch: () async {
                           DBClientSet appDB =
                               await Application.instance!.make("app_db");
-                          return (await appDB.Plan().first(e.id!))!;
+                          PlanInfo pi = PlanInfo();
+                          pi.pt = (await appDB.Plan().first(e.id!))!;
+                          pi.pw = await pi.pt.eachWeekJointStatus();
+                          return pi;
                         },
-                        content: (BuildContext context, PlanType? p) {
+                        content: (BuildContext context, PlanInfo? p) {
                           return Row(
                             children: [
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: p == null
-                                    ? [const Text("错误了")]
+                                children: p == null ? [const Text("错误了")]
                                     : [
-                                        Text(p.desc!),
+                                        Text(p.pt.desc!),
+                                        Row(
+                                          children: p.pw.where((e) => diffDay(DateTime.now(), e.end) <= 7).map((pw) => Container(
+                                            padding: const EdgeInsets.all(4),
+                                            child: Column(
+                                              children: [
+                                                Container(
+                                                  padding: EdgeInsets.all(2),
+                                                  decoration: BoxDecoration(color: pw.week == p.pt.currentWeek ? Colors.red : Colors.orange.shade600, borderRadius: BorderRadius.all(Radius.circular(6))),
+                                                  child: Text("第${pw.week}周", style: TextStyle(color: Colors.white),),
+                                                ),
+                                                Text("${pw.joint}/${pw.jointCount}"),
+                                              ],
+                                            ),
+                                          )).toList(),
+                                        ),
                                         Text(
-                                            "joint: ${p.joint ?? 0}/${p.jointCount ?? 0}"),
+                                            "joint: ${p.pt.joint ?? 0}/${p.pt.jointCount ?? 0}"),
+                                        Text("deadline: ${p.pt.deadLine!.year}.${p.pt.deadLine!.month}.${p.pt.deadLine!.day}, ${ p.pt.hasDay == 0 ? "只有今天了" : ("${p.pt.hasDay > 0 ? "还有" : "过期"}${p.pt.hasDay.abs()}天")}"),
                                         Text(
-                                            "deadline: ${p.deadLine!.year}.${p.deadLine!.month}.${p.deadLine!.day}, 还有${p.deadLine!.difference(DateTime.now()).inDays}天"),
-                                        Text(
-                                            "day goes: ${DateTime.now().difference(p.createdAt!).inDays}天")
+                                            "day goes: ${p.pt.goesDay}天")
                                       ],
                               )
                             ],
                           );
                         },
                         actions: [
-                          ItemAction<PlanType>(
-                              cb: (PlanType? p, Function() refresh) async {
+                          ItemAction<PlanInfo>(
+                              cb: (PlanInfo? p, Function() refresh) async {
                                 DBClientSet appDB =
                                     await Application.instance!.make("app_db");
-                                var target = (p!.joint ?? 0) + 1;
-                                var jc = p.jointCount ?? 0;
+                                var target = (p!.pt.joint ?? 0) + 1;
+                                var jc = p.pt.jointCount ?? 0;
                                 if (target > jc || jc == 0) {
                                   tip.TextAlertDesc(context, "太大了!");
                                   return;
                                 }
 
-                                p.joint = target;
+                                p.pt.joint = target;
                                 if (target == jc) {
-                                  p.finishAt = DateTime.now();
+                                  p.pt.finishAt = DateTime.now();
                                 }
-                                await p.save();
+
+                                var pdt = PlanDetailType(
+                                  hit: target,
+                                  createdAt: DateTime.now(),
+                                );
+                                var fu = FormUtil(title: "记录", fis: [
+                                  FormItem(field: PlanDetailClient.descField, title: "描述")
+                                ], save: (BuildContext context, FormData data) {
+                                  pdt.fill(data.data);
+                                  Navigator.pop(context);
+                                });
+                                await showDialog(context: context, builder: (BuildContext context) => fu.view(context));
+                                await p.pt.save();
                                 await appDB.PlanDetail()
                                     .newType()
-                                    .fillByType(PlanDetailType(
-                                      hit: target,
-                                      createdAt: DateTime.now(),
-                                    ))
-                                    .setPlan(p.id!)
+                                    .fillByType(pdt)
+                                    .setPlan(p.pt.id!)
                                     .save();
                                 fetch();
                               },
                               icon: const Icon(Icons.plus_one)),
-                          ItemAction<PlanType>(
-                              cb: (PlanType? p, Function() refresh) {
+                          ItemAction<PlanInfo>(
+                              cb: (PlanInfo? p, Function() refresh) {
                                 Navigator.pushNamed(
-                                    context, "/plan/${p!.id}/detail");
+                                    context, "/plan/${p!.pt.id}/detail")
+                                    .then((value) => fetch());
                               },
                               icon: const Icon(Icons.info))
                         ],

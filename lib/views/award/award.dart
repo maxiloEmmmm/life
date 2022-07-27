@@ -33,9 +33,6 @@ class _AwardViewState extends State<AwardView> {
   Future<List<AwardType>?>? fetchFunction() async {
     try {
       DBClientSet appDB = await Application.instance!.make("app_db");
-      appDB.db
-          .rawQuery("select * from Award_Thing")
-          .then((value) => print(value));
       return await appDB.Award().all();
     } catch (e) {
       return null;

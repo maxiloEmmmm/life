@@ -37,7 +37,7 @@ class _AddState extends State<Add> {
         change: () {
           setState(() {});
         },
-        save: (FormData data) async {
+        save: (BuildContext context, FormData data) async {
           if (!data.valid) {
             tip.TextAlertDesc(context, "请检查!");
             return;

@@ -15,11 +15,6 @@ class Ngrok extends StatefulWidget {
 }
 
 class _NgrokState extends State<Ngrok> {
-  List<NgrokType> ns = [];
-
-  //2Bk4TjVjGYgW443S5vCbcdGlrWN_5dqQ3WV4GF6wkkBuaXM9y
-  //2BneJIDZFnV6PaUxTvmgZfxjlL6_2ku2y3yn41wdZzJTVc8vG
-
   @override
   void initState() {
     super.initState();
@@ -33,20 +28,6 @@ class _NgrokState extends State<Ngrok> {
           DBClientSet appDB = await Application.instance!.make("app_db");
           var ngroks = await appDB.Ngrok().all();
           return ngroks;
-          // return ngroks.map((e) => NgrokFetch(
-          //   e.identity ?? "", e.apiKey ?? "",
-          //   removeHandle: (identity) async {
-          //      try {
-          //         if((await appDB.ngrokClient.delete(identity)) == 1) {
-          //           tip.TextAlertDescWithCB(context, "成功", () => fetch());
-          //           return;
-          //         }
-          //         throw "失败";
-          //       }catch(e) {
-          //         tip.TextAlertDesc(context, sprintf("[%s] %s", [identity, e.toString()]));
-          //       }
-          //   },
-          //)).toList();
         } catch (e) {
           return null;
         }
@@ -115,15 +96,15 @@ class _NgrokState extends State<Ngrok> {
                               context, "/ngrok/update/${item.ng.id}")
                           .then((value) => refresh());
                     },
-                    title: (NgrokItem item) {
-                      return item.ng.identity!;
+                    title: (NgrokItem? item) {
+                      return item?.ng.identity ?? "";
                     },
                     fetch: () async {
                       List<ngrok_sdk.NgrokAgent> nas = [];
                       try {
                         nas = await ngrok_sdk.Ngrok(e.apiKey!).agent();
-                      } catch (e) {
-                        return null;
+                      } catch (ex) {
+                        //todo 错误如何显示
                       }
                       return NgrokItem(ng: e, ag: nas);
                     },

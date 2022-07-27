@@ -37,10 +37,10 @@ class _ItemState<T> extends State<Item<T>> {
     refresh();
   }
 
-  Future<T>? _fetch;
+  Future<T?>? _fetch;
 
   void refresh() {
-    _fetch = widget.fetch() as Future<T>;
+    _fetch = widget.fetch();
   }
 
   void doFetch() {
@@ -51,35 +51,35 @@ class _ItemState<T> extends State<Item<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<T>(
+    return FutureBuilder<T?>(
       future: _fetch,
       builder: (context, snapshot) {
         List<Widget> sBtn = [];
         if (snapshot.data != null) {
-          sBtn.addAll([
-            SlidableAction(
+          if(widget.onRemove != null) {
+            sBtn.add(SlidableAction(
               onPressed: (BuildContext context) {
-                if (widget.onRemove != null) {
-                  widget.onRemove!(snapshot.data!);
-                }
+                widget.onRemove!(snapshot.data!);
               },
               backgroundColor: Color(0xFFFE4A49),
               foregroundColor: Colors.white,
               icon: Icons.delete,
               label: '干掉',
-            ),
-            SlidableAction(
-              onPressed: (BuildContext context) {
-                if (widget.onUpdate != null) {
+            ));
+          }
+          if(widget.onUpdate != null) {
+            sBtn.add(
+              SlidableAction(
+                onPressed: (BuildContext context) {
                   widget.onUpdate!(snapshot.data!, doFetch);
-                }
-              },
-              backgroundColor: Colors.blue.shade200,
-              foregroundColor: Colors.white,
-              icon: Icons.update,
-              label: '改变',
-            ),
-          ]);
+                },
+                backgroundColor: Colors.blue.shade200,
+                foregroundColor: Colors.white,
+                icon: Icons.update,
+                label: '改变',
+              ),
+            );
+          }
         }
 
         return Slidable(
@@ -116,7 +116,7 @@ class _ItemState<T> extends State<Item<T>> {
 
     return Container(
       margin: const EdgeInsets.only(top: 34),
-      decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
+      decoration: BoxDecoration(color: Colors.white,  boxShadow: <BoxShadow>[
         BoxShadow(
             color: Colors.grey.shade200,
             offset: const Offset(0.0, 5.0),
