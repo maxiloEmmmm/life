@@ -137,6 +137,7 @@ class _PlanState extends State<Plan> {
                                                   child: Text("第${pw.week}周", style: TextStyle(color: Colors.white),),
                                                 ),
                                                 Text("${pw.joint}/${pw.jointCount}"),
+                                                pw.week == p.pt.currentWeek ? Text("剩${diffDay(DateTime.now(), pw.end)}天") : Container()
                                               ],
                                             ),
                                           )).toList(),

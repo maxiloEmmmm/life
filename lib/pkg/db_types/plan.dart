@@ -7,7 +7,7 @@ part of 'db.dart';
     DBMetaField(name: "createdAt", type: DBFieldType.DateTime),
     DBMetaField(name: "deadLine", type: DBFieldType.DateTime),
     DBMetaField(name: "finishAt", type: DBFieldType.DateTime),
-    DBMetaField(name: "joint", type: DBFieldType.Int),
+    DBMetaField(name: "joint", type: DBFieldType.Int, defaultDefine: "0"),
     DBMetaField(name: "jointCount", type: DBFieldType.Int),
   ],
   edges: [
@@ -70,7 +70,7 @@ extension PlanTypeHelp on PlanType {
     var it = es.iterator;
     List<PlanWeek> piws = [];
     while(it.moveNext()) {
-      var pdRows = await clientSet.PlanDetail().query("select * from ${PlanDetailClient.table} where ${PlanDetailClient.createdAtField} >= ? and ${PlanDetailClient.createdAtField} <= ?", [it.current.start.toString(), it.current.end.toString()]);
+      var pdRows = await clientSet.PlanDetail().query("select * from ${PlanDetailClient.table} where ${PlanDetailClient.Plan_refField} = ? and ${PlanDetailClient.createdAtField} >= ? and ${PlanDetailClient.createdAtField} <= ?", [id, it.current.start.toString(), it.current.end.toString()]);
       it.current.joint = pdRows.length;
     }
     return es;

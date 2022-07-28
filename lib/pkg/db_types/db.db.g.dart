@@ -1038,6 +1038,8 @@ class PlanType {
 
   Future<PlanType> save() async {
     if (id == null) {
+      joint ??= 0;
+
       id = await clientSet.Plan().insert(this);
     } else {
       await clientSet.Plan().update(this);
