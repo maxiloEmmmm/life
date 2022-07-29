@@ -57,9 +57,8 @@ extension PlanTypeHelp on PlanType {
       pw.start = createdAt!.add(Duration(days: (cur-1)*7));
       pw.end = createdAt!.add(Duration(days: cur*7));
 
-      double currWeekShould = cur * eachWeekJoint;
       
-      pw.jointCount = currWeekShould > jointCount! ? currWeekShould - jointCount! : currWeekShould;
+      pw.jointCount = eachWeekJoint > jointCount! ? eachWeekJoint - jointCount! : eachWeekJoint;
       ret.add(pw);
       cur++;
     }

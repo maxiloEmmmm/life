@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/component/form.dart';
+import 'package:focus/pkg/component/process.dart';
 import 'package:focus/pkg/db_types/db.dart';
 import 'package:focus/pkg/util/date.dart';
 import 'package:focus/pkg/util/tip.dart';
@@ -34,14 +35,14 @@ class _PlanState extends State<Plan> {
       var rs = await appDB.Plan().all();
       var now = DateTime.now();
       rs.sort((a, b) {
-        if(!a.finish || !b.finish) {
+        if (!a.finish || !b.finish) {
           // 过期往前放
-          if(diffDay(a.deadLine!, now) > 0) {
+          if (diffDay(a.deadLine!, now) > 0) {
             return -1;
           }
 
           // 过期往前放
-          if(diffDay(b.deadLine!, now) > 0) {
+          if (diffDay(b.deadLine!, now) > 0) {
             return 1;
           }
         }
@@ -122,7 +123,8 @@ class _PlanState extends State<Plan> {
                           fetch();
                         },
                         onUpdate: (PlanInfo p, Function() refresh) async {
-                          Navigator.pushNamed(context, "/plan/update/${p.pt.id}")
+                          Navigator.pushNamed(
+                                  context, "/plan/update/${p.pt.id}")
                               .then((value) => fetch());
                         },
                         fetch: () async {
@@ -136,34 +138,106 @@ class _PlanState extends State<Plan> {
                         content: (BuildContext context, PlanInfo? p) {
                           return Row(
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: p == null ? [const Text("错误了")]
-                                    : [
-                                        Text(p.pt.desc!),
-                                        Row(
-                                          children: p.pw.where((e) => diffDay(DateTime.now(), e.end) <= 7).map((pw) => Container(
-                                            padding: const EdgeInsets.all(4),
-                                            child: Column(
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets.all(2),
-                                                  decoration: BoxDecoration(color: pw.week == p.pt.currentWeek ? Colors.red : Colors.orange.shade600, borderRadius: BorderRadius.all(Radius.circular(6))),
-                                                  child: Text("第${pw.week}周", style: const TextStyle(color: Colors.white),),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: p == null
+                                      ? [const Text("错误了")]
+                                      : [
+                                          Text(p.pt.desc!),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: () {
+                                              var oldWeek = p.pw
+                                                  .where((e) =>
+                                                      diffDay(DateTime.now(),
+                                                          e.end) <=
+                                                      7)
+                                                  .toList();
+                                              return oldWeek.getRange(
+                                                  oldWeek.length >= 3
+                                                      ? oldWeek.length - 3
+                                                      : 0,
+                                                  oldWeek.length);
+                                            }()
+                                                .map((pw) => Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              4),
+                                                      child: Column(
+                                                        children: [
+                                                          Container(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(2),
+                                                            decoration: BoxDecoration(
+                                                                color: pw.week ==
+                                                                        p.pt
+                                                                            .currentWeek
+                                                                    ? Colors.red
+                                                                    : Colors
+                                                                        .orange
+                                                                        .shade600,
+                                                                borderRadius: BorderRadius
+                                                                    .all(Radius
+                                                                        .circular(
+                                                                            6))),
+                                                            child: Text(
+                                                              "第${pw.week}周",
+                                                              style: const TextStyle(
+                                                                  color: Colors
+                                                                      .white),
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                              "${pw.joint}/${pw.jointCount == pw.jointCount.truncate().toDouble() ? pw.jointCount.truncate() : pw.jointCount.toStringAsFixed(1)}"),
+                                                          pw.week ==
+                                                                  p.pt
+                                                                      .currentWeek
+                                                              ? Text(
+                                                                  "剩${diffDay(DateTime.now(), pw.end)}天")
+                                                              : Container()
+                                                        ],
+                                                      ),
+                                                    ))
+                                                .toList(),
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                  "${p.pt.createdAt!.year}.${p.pt.createdAt!.month}.${p.pt.createdAt!.day} ~ ${p.pt.deadLine!.year}.${p.pt.deadLine!.month}.${p.pt.deadLine!.day}"),
+                                              Text(
+                                                  "joint: ${p.pt.joint ?? 0}/${p.pt.jointCount ?? 0}"),
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text("${p.pt.goesDay}天"),
+                                              Expanded(
+                                                flex: 1,
+                                                child: Center(
+                                                  child: Text(
+                                                      "共${diffDay(p.pt.createdAt!, p.pt.deadLine!)}天, ${diffWeek(p.pt.createdAt!, p.pt.deadLine!)}周"),
                                                 ),
-                                                Text("${pw.joint}/${pw.jointCount == pw.jointCount.truncate().toDouble() ? pw.jointCount.truncate() : pw.jointCount.toStringAsFixed(1)}"),
-                                                pw.week == p.pt.currentWeek ? Text("剩${diffDay(DateTime.now(), pw.end)}天") : Container()
-                                              ],
-                                            ),
-                                          )).toList(),
-                                        ),
-                                        Text(
-                                            "joint: ${p.pt.joint ?? 0}/${p.pt.jointCount ?? 0}"),
-                                        Text("共${diffDay(p.pt.createdAt!, p.pt.deadLine!)}天, ${diffWeek(p.pt.createdAt!, p.pt.deadLine!)}周"),
-                                        Text("deadline: ${p.pt.deadLine!.year}.${p.pt.deadLine!.month}.${p.pt.deadLine!.day}, ${ p.pt.hasDay == 0 ? "只有今天了" : ("${p.pt.hasDay > 0 ? "还有" : "过期"}${p.pt.hasDay.abs()}天")}"),
-                                        Text(
-                                            "day goes: ${p.pt.goesDay}")
-                                      ],
+                                              ),
+                                              Text("${p.pt.hasDay}天")
+                                            ],
+                                          ),
+                                          Container(
+                                              child: Process(
+                                                p.pt.goesDay /
+                                                    diffDay(p.pt.createdAt!,
+                                                        p.pt.deadLine!),
+                                                color: Colors.deepOrange,
+                                              ),
+                                              height: 10),
+                                        ],
+                                ),
                               )
                             ],
                           );
@@ -179,15 +253,31 @@ class _PlanState extends State<Plan> {
                                   createdAt: DateTime.now(),
                                 );
                                 // todo only save
-                                var fu = FormUtil(title: "记录", fis: [
-                                  FormItem(field: PlanDetailClient.hitField, title: "增加", type: FormItemType.intType, defaultValue: "1", help: ">0", validate: (value) => value as int > 0),
-                                  FormItem(field: PlanDetailClient.descField, title: "描述")
-                                ], save: (BuildContext context, FormData data) {
-                                  pdt.fill(data.data);
-                                  Navigator.pop(context);
-                                });
+                                var fu = FormUtil(
+                                    title: "记录",
+                                    fis: [
+                                      FormItem(
+                                          field: PlanDetailClient.hitField,
+                                          title: "增加",
+                                          type: FormItemType.intType,
+                                          defaultValue: "1",
+                                          help: ">0",
+                                          validate: (value) =>
+                                              value as int > 0),
+                                      FormItem(
+                                          field: PlanDetailClient.descField,
+                                          title: "描述")
+                                    ],
+                                    save:
+                                        (BuildContext context, FormData data) {
+                                      pdt.fill(data.data);
+                                      Navigator.pop(context);
+                                    });
 
-                                await showDialog(context: context, builder: (BuildContext context) => fu.view(context));
+                                await showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) =>
+                                        fu.view(context));
                                 var jc = p!.pt.jointCount ?? 0;
                                 var target = pdt.hit! + p.pt.joint!;
                                 if (target > jc || jc == 0) {
@@ -211,7 +301,7 @@ class _PlanState extends State<Plan> {
                           ItemAction<PlanInfo>(
                               cb: (PlanInfo? p, Function() refresh) {
                                 Navigator.pushNamed(
-                                    context, "/plan/${p!.pt.id}/detail")
+                                        context, "/plan/${p!.pt.id}/detail")
                                     .then((value) => fetch());
                               },
                               icon: const Icon(Icons.info))
