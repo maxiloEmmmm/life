@@ -65,13 +65,8 @@ class _DetailState extends State<Detail> {
                 },
                 onRemove: (PlanDetailType pdt) async {
                   var p = await pdt.queryPlan();
-                  if(p!.joint != pdt.hit) {
-                    tip.TextAlertDesc(context, "只能从最后一条删起");
-                    return;
-                  }
-
                   await pdt.destory();
-                  p.joint = p.joint! - 1;
+                  p!.joint = p.joint! - pdt.hit!;
                   await p.save();
                   tip.TextAlertDescWithCB(context, "ok", () => fetch());
                 },

@@ -141,7 +141,7 @@ class _ItemState<T> extends State<Item<T>> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
+                    Expanded(
                         child: Container(
                       padding: const EdgeInsets.only(left: 4),
                       child: Text(title),
@@ -152,7 +152,6 @@ class _ItemState<T> extends State<Item<T>> {
                     )),
                     //  todo: add refresh
                     Expanded(
-                      flex: 3,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: btns,

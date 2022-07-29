@@ -32,11 +32,26 @@ class _PlanState extends State<Plan> {
     try {
       DBClientSet appDB = await Application.instance!.make("app_db");
       var rs = await appDB.Plan().all();
+      var now = DateTime.now();
       rs.sort((a, b) {
+        if(!a.finish || !b.finish) {
+          // 过期往前放
+          if(diffDay(a.deadLine!, now) > 0) {
+            return -1;
+          }
+
+          // 过期往前放
+          if(diffDay(b.deadLine!, now) > 0) {
+            return 1;
+          }
+        }
+
         if (!a.finish && !b.finish) {
+          // 没完成 最近创建的往前放
           return a.id! < b.id! ? 1 : -1;
         }
 
+        // 完成的往后放
         return a.finish ? 1 : -1;
       });
 
@@ -132,11 +147,11 @@ class _PlanState extends State<Plan> {
                                             child: Column(
                                               children: [
                                                 Container(
-                                                  padding: EdgeInsets.all(2),
+                                                  padding: const EdgeInsets.all(2),
                                                   decoration: BoxDecoration(color: pw.week == p.pt.currentWeek ? Colors.red : Colors.orange.shade600, borderRadius: BorderRadius.all(Radius.circular(6))),
-                                                  child: Text("第${pw.week}周", style: TextStyle(color: Colors.white),),
+                                                  child: Text("第${pw.week}周", style: const TextStyle(color: Colors.white),),
                                                 ),
-                                                Text("${pw.joint}/${pw.jointCount}"),
+                                                Text("${pw.joint}/${pw.jointCount == pw.jointCount.truncate().toDouble() ? pw.jointCount.truncate() : pw.jointCount.toStringAsFixed(1)}"),
                                                 pw.week == p.pt.currentWeek ? Text("剩${diffDay(DateTime.now(), pw.end)}天") : Container()
                                               ],
                                             ),
@@ -144,9 +159,10 @@ class _PlanState extends State<Plan> {
                                         ),
                                         Text(
                                             "joint: ${p.pt.joint ?? 0}/${p.pt.jointCount ?? 0}"),
+                                        Text("共${diffDay(p.pt.createdAt!, p.pt.deadLine!)}天, ${diffWeek(p.pt.createdAt!, p.pt.deadLine!)}周"),
                                         Text("deadline: ${p.pt.deadLine!.year}.${p.pt.deadLine!.month}.${p.pt.deadLine!.day}, ${ p.pt.hasDay == 0 ? "只有今天了" : ("${p.pt.hasDay > 0 ? "还有" : "过期"}${p.pt.hasDay.abs()}天")}"),
                                         Text(
-                                            "day goes: ${p.pt.goesDay}天")
+                                            "day goes: ${p.pt.goesDay}")
                                       ],
                               )
                             ],
@@ -157,8 +173,23 @@ class _PlanState extends State<Plan> {
                               cb: (PlanInfo? p, Function() refresh) async {
                                 DBClientSet appDB =
                                     await Application.instance!.make("app_db");
-                                var target = (p!.pt.joint ?? 0) + 1;
-                                var jc = p.pt.jointCount ?? 0;
+
+                                var pdt = PlanDetailType(
+                                  hit: 1,
+                                  createdAt: DateTime.now(),
+                                );
+                                // todo only save
+                                var fu = FormUtil(title: "记录", fis: [
+                                  FormItem(field: PlanDetailClient.hitField, title: "增加", type: FormItemType.intType, defaultValue: "1", help: ">0", validate: (value) => value as int > 0),
+                                  FormItem(field: PlanDetailClient.descField, title: "描述")
+                                ], save: (BuildContext context, FormData data) {
+                                  pdt.fill(data.data);
+                                  Navigator.pop(context);
+                                });
+
+                                await showDialog(context: context, builder: (BuildContext context) => fu.view(context));
+                                var jc = p!.pt.jointCount ?? 0;
+                                var target = pdt.hit! + p.pt.joint!;
                                 if (target > jc || jc == 0) {
                                   tip.TextAlertDesc(context, "太大了!");
                                   return;
@@ -168,18 +199,6 @@ class _PlanState extends State<Plan> {
                                 if (target == jc) {
                                   p.pt.finishAt = DateTime.now();
                                 }
-
-                                var pdt = PlanDetailType(
-                                  hit: target,
-                                  createdAt: DateTime.now(),
-                                );
-                                var fu = FormUtil(title: "记录", fis: [
-                                  FormItem(field: PlanDetailClient.descField, title: "描述")
-                                ], save: (BuildContext context, FormData data) {
-                                  pdt.fill(data.data);
-                                  Navigator.pop(context);
-                                });
-                                await showDialog(context: context, builder: (BuildContext context) => fu.view(context));
                                 await p.pt.save();
                                 await appDB.PlanDetail()
                                     .newType()

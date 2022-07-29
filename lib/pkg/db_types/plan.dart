@@ -18,7 +18,7 @@ part of 'db.dart';
 class Plan {}
 
 class PlanWeek {
-  late int jointCount;
+  late double jointCount;
   late DateTime start;
   late DateTime end;
   late int week;
@@ -50,14 +50,15 @@ extension PlanTypeHelp on PlanType {
     List<PlanWeek> ret = [];
     int cur = 1;
     int wn = weekNum;
-    int eachWeekJoint = (jointCount! / wn).floor();
+    double eachWeekJoint = jointCount! / wn;
     while(cur <= wn) {
       PlanWeek pw = PlanWeek();
       pw.week = cur;
       pw.start = createdAt!.add(Duration(days: (cur-1)*7));
       pw.end = createdAt!.add(Duration(days: cur*7));
 
-      int currWeekShould = cur * eachWeekJoint;
+      double currWeekShould = cur * eachWeekJoint;
+      
       pw.jointCount = currWeekShould > jointCount! ? currWeekShould - jointCount! : currWeekShould;
       ret.add(pw);
       cur++;
@@ -71,7 +72,9 @@ extension PlanTypeHelp on PlanType {
     List<PlanWeek> piws = [];
     while(it.moveNext()) {
       var pdRows = await clientSet.PlanDetail().query("select * from ${PlanDetailClient.table} where ${PlanDetailClient.Plan_refField} = ? and ${PlanDetailClient.createdAtField} >= ? and ${PlanDetailClient.createdAtField} <= ?", [id, it.current.start.toString(), it.current.end.toString()]);
-      it.current.joint = pdRows.length;
+      int count = 0;
+      pdRows.forEach((element) {count += element.hit!;});
+      it.current.joint = count;
     }
     return es;
   }
