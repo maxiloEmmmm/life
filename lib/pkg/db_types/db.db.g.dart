@@ -840,7 +840,7 @@ class ThingType {
   Future<List<AwardType>> queryAward() async {
     var rows = await clientSet
         .query()
-        .table(Table.from("AwardClient.table"))
+        .table(Table.from(AwardClient.table))
         .where(In("id", [
           clientSet
               .query()
@@ -1122,7 +1122,7 @@ class PlanType {
   Future<List<AwardType>> queryAward() async {
     var rows = await clientSet
         .query()
-        .table(Table.from("AwardClient.table"))
+        .table(Table.from(AwardClient.table))
         .where(In("id", [
           clientSet
               .query()
