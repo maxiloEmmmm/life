@@ -7,6 +7,5 @@ int diffDay(DateTime start, end) {
 }
 
 int diffWeek(DateTime start, end) {
-  var dw = (diffDay(start, end) / 7).ceil();
-  return dw == 0 ? 1 : dw;
+  return ((diffDay(start, end) + 1) / 7).ceil();
 }

@@ -222,7 +222,7 @@ class _PlanState extends State<Plan> {
                                                 flex: 1,
                                                 child: Center(
                                                   child: Text(
-                                                      "共${diffDay(p.pt.createdAt!, p.pt.deadLine!)}天, ${diffWeek(p.pt.createdAt!, p.pt.deadLine!)}周"),
+                                                      "共${p.pt.dayNum}天, ${diffWeek(p.pt.createdAt!, p.pt.deadLine!)}周"),
                                                 ),
                                               ),
                                               Text("${p.pt.hasDay}天")
@@ -230,9 +230,7 @@ class _PlanState extends State<Plan> {
                                           ),
                                           Container(
                                               child: Process(
-                                                p.pt.goesDay /
-                                                    diffDay(p.pt.createdAt!,
-                                                        p.pt.deadLine!),
+                                                p.pt.goesDay / p.pt.dayNum,
                                                 color: Colors.deepOrange,
                                               ),
                                               height: 10),

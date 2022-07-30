@@ -37,6 +37,14 @@ ${PlanClient.schema}
 ''';
   DBClientSet(this.db);
 
+  QueryBuild<Map<String, Object?>> query() {
+    var qb = QueryBuild<Map<String, Object?>>();
+    qb.queryFunc = (String q) async {
+      return await db.rawQuery(q);
+    };
+    return qb;
+  }
+
   Future<void> transaction(Future<void> Function() cb) async {
     var _db = db;
     try {
@@ -77,8 +85,9 @@ class NgrokClient {
         .rawDelete("delete from $table where id = ?", [id]);
   }
 
-  Future<NgrokType?> first(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<NgrokType?> first(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       return null;
     }
@@ -86,12 +95,13 @@ class NgrokClient {
     return rows[0];
   }
 
-  Future<NgrokType> firstOrNew(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<NgrokType> firstOrNew(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       var item = NgrokType();
-      if (id > 0) {
-        item.id = id;
+      if (idx > 0) {
+        item.id = idx;
       }
       return wrapType(item);
     }
@@ -105,14 +115,17 @@ class NgrokClient {
   }
 
   Future<List<NgrokType>> all() async {
-    return await query("select * from $table", []);
+    return await query().query();
   }
 
-  Future<List<NgrokType>> query(String query,
-      [List<Object?>? arguments]) async {
-    return (await clientSet.db.rawQuery(query, arguments))
-        .map((e) => newTypeByRow(e))
-        .toList();
+  QueryBuild<NgrokType> query() {
+    var qb = QueryBuild<NgrokType>()..table(Table.from(table));
+    qb.queryFunc = (String q) async {
+      return (await clientSet.db.rawQuery(q))
+          .map((e) => newTypeByRow(e))
+          .toList();
+    };
+    return qb;
   }
 
   Future<int> insert(NgrokType obj) async {
@@ -237,8 +250,9 @@ class AwardClient {
         .rawDelete("delete from $table where id = ?", [id]);
   }
 
-  Future<AwardType?> first(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<AwardType?> first(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       return null;
     }
@@ -246,12 +260,13 @@ class AwardClient {
     return rows[0];
   }
 
-  Future<AwardType> firstOrNew(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<AwardType> firstOrNew(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       var item = AwardType();
-      if (id > 0) {
-        item.id = id;
+      if (idx > 0) {
+        item.id = idx;
       }
       return wrapType(item);
     }
@@ -265,14 +280,17 @@ class AwardClient {
   }
 
   Future<List<AwardType>> all() async {
-    return await query("select * from $table", []);
+    return await query().query();
   }
 
-  Future<List<AwardType>> query(String query,
-      [List<Object?>? arguments]) async {
-    return (await clientSet.db.rawQuery(query, arguments))
-        .map((e) => newTypeByRow(e))
-        .toList();
+  QueryBuild<AwardType> query() {
+    var qb = QueryBuild<AwardType>()..table(Table.from(table));
+    qb.queryFunc = (String q) async {
+      return (await clientSet.db.rawQuery(q))
+          .map((e) => newTypeByRow(e))
+          .toList();
+    };
+    return qb;
   }
 
   Future<int> insert(AwardType obj) async {
@@ -388,10 +406,17 @@ class AwardType {
   }
 
   Future<List<PlanType>> queryPlans() async {
-    var rows = await clientSet.db.rawQuery(
-        "select * from ${PlanClient.table} where id in (select Plan_ref from Award_Plan where Award_ref = ? )",
-        [id]);
-    return rows.map((row) => clientSet.Plan().newTypeByRow(row)).toList();
+    var rows = await clientSet.Plan()
+        .query()
+        .where(In("id", [
+          QueryBuild()
+              .select("Plan_ref")
+              .table(Table.from("Award_Plan"))
+              .where(Eq("Award_ref", id))
+        ]))
+        .query();
+
+    return rows;
   }
 
   Future<void> setPlans(List<int> ids) async {
@@ -404,13 +429,21 @@ class AwardType {
   }
 
   Future<ThingType?> queryThing() async {
-    var rows = await clientSet.db.rawQuery(
-        "select * from ${ThingClient.table} where id in (select Thing_ref from Award_Thing where Award_ref = ? limit 1)",
-        [id]);
+    var rows = await clientSet.Thing()
+        .query()
+        .where(In("id", [
+          QueryBuild()
+              .select("Thing_ref")
+              .table(Table.from("Award_Thing"))
+              .where(Eq("Award_ref", id))
+              .limit(1)
+        ]))
+        .query();
+
     if (rows.isEmpty) {
       return null;
     }
-    return clientSet.Thing().newTypeByRow(rows[0]);
+    return rows[0];
   }
 
   Future<void> setThing(int idx) async {
@@ -432,8 +465,9 @@ class PlanDetailClient {
         .rawDelete("delete from $table where id = ?", [id]);
   }
 
-  Future<PlanDetailType?> first(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<PlanDetailType?> first(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       return null;
     }
@@ -441,12 +475,13 @@ class PlanDetailClient {
     return rows[0];
   }
 
-  Future<PlanDetailType> firstOrNew(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<PlanDetailType> firstOrNew(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       var item = PlanDetailType();
-      if (id > 0) {
-        item.id = id;
+      if (idx > 0) {
+        item.id = idx;
       }
       return wrapType(item);
     }
@@ -460,14 +495,17 @@ class PlanDetailClient {
   }
 
   Future<List<PlanDetailType>> all() async {
-    return await query("select * from $table", []);
+    return await query().query();
   }
 
-  Future<List<PlanDetailType>> query(String query,
-      [List<Object?>? arguments]) async {
-    return (await clientSet.db.rawQuery(query, arguments))
-        .map((e) => newTypeByRow(e))
-        .toList();
+  QueryBuild<PlanDetailType> query() {
+    var qb = QueryBuild<PlanDetailType>()..table(Table.from(table));
+    qb.queryFunc = (String q) async {
+      return (await clientSet.db.rawQuery(q))
+          .map((e) => newTypeByRow(e))
+          .toList();
+    };
+    return qb;
   }
 
   Future<int> insert(PlanDetailType obj) async {
@@ -612,8 +650,12 @@ class PlanDetailType {
   }
 
   Future<PlanType?> queryPlan() async {
-    var rows = await clientSet.Plan().query(
-        "select * from ${PlanClient.table} where id = ? limit 1", [Plan_ref]);
+    var rows = await clientSet.Plan()
+        .query()
+        .where(Eq("id", Plan_ref))
+        .limit(1)
+        .query();
+
     if (rows.isEmpty) {
       return null;
     }
@@ -635,8 +677,9 @@ class ThingClient {
         .rawDelete("delete from $table where id = ?", [id]);
   }
 
-  Future<ThingType?> first(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<ThingType?> first(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       return null;
     }
@@ -644,12 +687,13 @@ class ThingClient {
     return rows[0];
   }
 
-  Future<ThingType> firstOrNew(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<ThingType> firstOrNew(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       var item = ThingType();
-      if (id > 0) {
-        item.id = id;
+      if (idx > 0) {
+        item.id = idx;
       }
       return wrapType(item);
     }
@@ -663,14 +707,17 @@ class ThingClient {
   }
 
   Future<List<ThingType>> all() async {
-    return await query("select * from $table", []);
+    return await query().query();
   }
 
-  Future<List<ThingType>> query(String query,
-      [List<Object?>? arguments]) async {
-    return (await clientSet.db.rawQuery(query, arguments))
-        .map((e) => newTypeByRow(e))
-        .toList();
+  QueryBuild<ThingType> query() {
+    var qb = QueryBuild<ThingType>()..table(Table.from(table));
+    qb.queryFunc = (String q) async {
+      return (await clientSet.db.rawQuery(q))
+          .map((e) => newTypeByRow(e))
+          .toList();
+    };
+    return qb;
   }
 
   Future<int> insert(ThingType obj) async {
@@ -791,9 +838,18 @@ class ThingType {
   }
 
   Future<List<AwardType>> queryAward() async {
-    var rows = await clientSet.db.rawQuery(
-        "select * from ${AwardClient.table} where id in (select Award_ref from Award_Thing where Thing_ref = ? limit 1)",
-        [id]);
+    var rows = await clientSet
+        .query()
+        .table(Table.from("AwardClient.table"))
+        .where(In("id", [
+          clientSet
+              .query()
+              .table(Table.from("Award_Thing"))
+              .select("Award_ref")
+              .where(Eq("Thing_ref", id))
+              .limit(1)
+        ]))
+        .query();
     return rows.map((row) => clientSet.Award().newTypeByRow(row)).toList();
   }
 
@@ -819,8 +875,9 @@ class PlanClient {
         .rawDelete("delete from $table where id = ?", [id]);
   }
 
-  Future<PlanType?> first(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<PlanType?> first(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       return null;
     }
@@ -828,12 +885,13 @@ class PlanClient {
     return rows[0];
   }
 
-  Future<PlanType> firstOrNew(int id) async {
-    var rows = await query("select * from $table where id = ?", [id]);
+  Future<PlanType> firstOrNew(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
     if (rows.isEmpty) {
       var item = PlanType();
-      if (id > 0) {
-        item.id = id;
+      if (idx > 0) {
+        item.id = idx;
       }
       return wrapType(item);
     }
@@ -847,13 +905,17 @@ class PlanClient {
   }
 
   Future<List<PlanType>> all() async {
-    return await query("select * from $table", []);
+    return await query().query();
   }
 
-  Future<List<PlanType>> query(String query, [List<Object?>? arguments]) async {
-    return (await clientSet.db.rawQuery(query, arguments))
-        .map((e) => newTypeByRow(e))
-        .toList();
+  QueryBuild<PlanType> query() {
+    var qb = QueryBuild<PlanType>()..table(Table.from(table));
+    qb.queryFunc = (String q) async {
+      return (await clientSet.db.rawQuery(q))
+          .map((e) => newTypeByRow(e))
+          .toList();
+    };
+    return qb;
   }
 
   Future<int> insert(PlanType obj) async {
@@ -1058,9 +1120,18 @@ class PlanType {
   }
 
   Future<List<AwardType>> queryAward() async {
-    var rows = await clientSet.db.rawQuery(
-        "select * from ${AwardClient.table} where id in (select Award_ref from Award_Plan where Plan_ref = ? limit 1)",
-        [id]);
+    var rows = await clientSet
+        .query()
+        .table(Table.from("AwardClient.table"))
+        .where(In("id", [
+          clientSet
+              .query()
+              .table(Table.from("Award_Plan"))
+              .select("Award_ref")
+              .where(Eq("Plan_ref", id))
+              .limit(1)
+        ]))
+        .query();
     return rows.map((row) => clientSet.Award().newTypeByRow(row)).toList();
   }
 
@@ -1077,8 +1148,9 @@ class PlanType {
   }
 
   Future<List<PlanDetailType>> queryPlanDetails() async {
-    var rows = clientSet.PlanDetail().query(
-        "select * from ${PlanDetailClient.table} where Plan_ref = ? ", [id]);
+    var rows =
+        await clientSet.PlanDetail().query().where(Eq("Plan_ref", id)).query();
+
     return rows;
   }
 }

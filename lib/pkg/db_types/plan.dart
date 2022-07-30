@@ -34,6 +34,10 @@ extension PlanTypeHelp on PlanType {
     return diffWeek(createdAt!, deadLine!);
   }
 
+  int get dayNum {
+    return diffDay(createdAt!, deadLine!) + 1;
+  }
+
   int get goesDay {
     return diffDay(createdAt!, DateTime.now());
   }
@@ -70,7 +74,13 @@ extension PlanTypeHelp on PlanType {
     var it = es.iterator;
     List<PlanWeek> piws = [];
     while(it.moveNext()) {
-      var pdRows = await clientSet.PlanDetail().query("select * from ${PlanDetailClient.table} where ${PlanDetailClient.Plan_refField} = ? and ${PlanDetailClient.createdAtField} >= ? and ${PlanDetailClient.createdAtField} <= ?", [id, it.current.start.toString(), it.current.end.toString()]);
+      var pdRows = await clientSet.PlanDetail().query()
+        .where(And([
+          // todo 生成父级查询
+          Eq(PlanDetailClient.Plan_refField, id),
+          GtE(PlanDetailClient.createdAtField, it.current.start.toString()),
+          LtE(PlanDetailClient.createdAtField, it.current.end.toString())
+        ])).query();
       int count = 0;
       pdRows.forEach((element) {count += element.hit!;});
       it.current.joint = count;
