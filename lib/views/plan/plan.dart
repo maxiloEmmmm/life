@@ -35,16 +35,14 @@ class _PlanState extends State<Plan> {
       var rs = await appDB.Plan().all();
       var now = DateTime.now();
       rs.sort((a, b) {
-        if (!a.finish || !b.finish) {
-          // 过期往前放
-          if (diffDay(a.deadLine!, now) > 0) {
-            return -1;
-          }
+        // 过期往前放
+        if (!a.finish && diffDay(a.deadLine!, now) > 0) {
+          return -1;
+        }
 
-          // 过期往前放
-          if (diffDay(b.deadLine!, now) > 0) {
-            return 1;
-          }
+        // 过期往前放
+        if (!b.finish && diffDay(b.deadLine!, now) > 0) {
+          return 1;
         }
 
         if (!a.finish && !b.finish) {
@@ -277,7 +275,7 @@ class _PlanState extends State<Plan> {
                                     builder: (BuildContext context) =>
                                         fu.view(context));
                                 var jc = p!.pt.jointCount ?? 0;
-                                var target = pdt.hit! + p.pt.joint!;
+                                var target = pdt.hit! + (p.pt.joint ?? 0);
                                 if (target > jc || jc == 0) {
                                   tip.TextAlertDesc(context, "太大了!");
                                   return;

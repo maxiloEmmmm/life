@@ -12,9 +12,6 @@ class appConfig {
       "db_enable": true,
       "db_schema": DBClientSet.schema,
       "db_migrate": [
-        '''
-insert into Plan(joint,jointCount,createdAt,deadLine,name,desc) values(2, 500,"2022-07-12", "2022-09-13", "t1", "")
-'''
       ],
     }, inDev: true);
   }
