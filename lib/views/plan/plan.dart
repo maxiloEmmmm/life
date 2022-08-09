@@ -252,6 +252,7 @@ class _PlanState extends State<Plan> {
                                 var fu = FormUtil(
                                     title: "记录",
                                     fis: [
+                                      FormItem(field: "countMode", title: "总计模式", type: FormItemType.switchType, defaultValue: true),
                                       FormItem(
                                           field: PlanDetailClient.hitField,
                                           title: "增加",
@@ -266,6 +267,10 @@ class _PlanState extends State<Plan> {
                                     ],
                                     save:
                                         (BuildContext context, FormData data) {
+                                      // 以当前数减去历史计算 差
+                                      if (data.data["countMode"] as bool) {
+                                        data.data[PlanDetailClient.hitField] = (data.data[PlanDetailClient.hitField] as int) - p!.pt.joint!;
+                                      }
                                       pdt.fill(data.data);
                                       Navigator.pop(context);
                                     });
