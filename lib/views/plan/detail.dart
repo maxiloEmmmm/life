@@ -37,7 +37,8 @@ class _DetailState extends State<Detail> {
       future: _fetch,
       builder:
           (BuildContext context, AsyncSnapshot<List<PlanDetailType>> snapshot) {
-        if (snapshot.hasData && snapshot.connectionState == ConnectionState.done) {
+        if (snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.done) {
           return view(context, snapshot.data!);
         } else {
           return const CupertinoActivityIndicator();
@@ -54,33 +55,33 @@ class _DetailState extends State<Detail> {
       body: Container(
         padding: EdgeInsets.all(8),
         child: Column(
-          children: pds
-              .map((e) => Item<PlanDetailType>(
-                type: "Detail",
-                title: (PlanDetailType pdt) {
-                  return "${e.hit}";
-                },
-                fetch: () async {
-                  return e;
-                },
-                onRemove: (PlanDetailType pdt) async {
-                  var p = await pdt.queryPlan();
-                  await pdt.destory();
-                  p!.joint = p.joint! - pdt.hit!;
-                  await p.save();
-                  tip.TextAlertDescWithCB(context, "ok", () => fetch());
-                },
-                content: (BuildContext context, PlanDetailType? pdt) {
-                  return Row(
-                    children: [
-                      Text(
-                          "${e.createdAt!.year}.${e.createdAt!.month}.${e.createdAt!.day}/${e.hit}"),
-                      Text(e.desc ?? "")
-                    ],
-                  );
-                },
-              )).toList()
-        ),
+            children: pds
+                .map((e) => Item<PlanDetailType>(
+                      type: "Detail",
+                      title: (PlanDetailType pdt) {
+                        return "${e.hit}";
+                      },
+                      fetch: () async {
+                        return e;
+                      },
+                      onRemove: (PlanDetailType pdt) async {
+                        var p = await pdt.queryPlan();
+                        await pdt.destory();
+                        p!.joint = p.joint! - pdt.hit!;
+                        await p.save();
+                        tip.TextAlertDescWithCB(context, "ok", () => fetch());
+                      },
+                      content: (BuildContext context, PlanDetailType? pdt) {
+                        return Row(
+                          children: [
+                            Text(
+                                "${e.createdAt!.year}.${e.createdAt!.month}.${e.createdAt!.day}/${e.hit}"),
+                            Text(e.desc ?? "", softWrap: true)
+                          ],
+                        );
+                      },
+                    ))
+                .toList()),
       ),
     );
   }

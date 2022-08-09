@@ -6,7 +6,8 @@ import 'package:sprintf/sprintf.dart';
 class ItemAction<T> {
   Widget icon;
   Function(T?, void Function() refresh) cb;
-  ItemAction({required this.icon, required this.cb});
+  bool Function(T?)? filter;
+  ItemAction({required this.icon, required this.cb, this.filter});
 }
 
 class Item<T> extends StatefulWidget {
@@ -56,7 +57,7 @@ class _ItemState<T> extends State<Item<T>> {
       builder: (context, snapshot) {
         List<Widget> sBtn = [];
         if (snapshot.data != null) {
-          if(widget.onRemove != null) {
+          if (widget.onRemove != null) {
             sBtn.add(SlidableAction(
               onPressed: (BuildContext context) {
                 widget.onRemove!(snapshot.data!);
@@ -67,7 +68,7 @@ class _ItemState<T> extends State<Item<T>> {
               label: '干掉',
             ));
           }
-          if(widget.onUpdate != null) {
+          if (widget.onUpdate != null) {
             sBtn.add(
               SlidableAction(
                 onPressed: (BuildContext context) {
@@ -102,7 +103,9 @@ class _ItemState<T> extends State<Item<T>> {
           child: const CupertinoActivityIndicator(),
           padding: EdgeInsets.all(12)));
     } else {
-      widget.actions?.forEach((e) {
+      widget.actions
+          ?.where((action) => action.filter == null || action.filter!(ii))
+          .forEach((e) {
         btns.add(IconButton(onPressed: () => e.cb(ii, doFetch), icon: e.icon));
       });
       btns.add(IconButton(
@@ -116,7 +119,7 @@ class _ItemState<T> extends State<Item<T>> {
 
     return Container(
       margin: const EdgeInsets.only(top: 34),
-      decoration: BoxDecoration(color: Colors.white,  boxShadow: <BoxShadow>[
+      decoration: BoxDecoration(color: Colors.white, boxShadow: <BoxShadow>[
         BoxShadow(
             color: Colors.grey.shade200,
             offset: const Offset(0.0, 5.0),

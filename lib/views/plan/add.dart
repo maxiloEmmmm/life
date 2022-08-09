@@ -22,7 +22,8 @@ class _AddState extends State<Add> {
         title: "Plan",
         fis: [
           FormItem(field: PlanClient.nameField, title: "名称"),
-          FormItem(field: PlanClient.descField, title: "描述"),
+          FormItem(
+              field: PlanClient.descField, title: "描述", option: {"maxLine": 5}),
           FormItem(
               field: PlanClient.deadLineField,
               title: "结束日期",

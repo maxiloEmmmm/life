@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:focus/pkg/component/assert.dart';
 import 'package:focus/pkg/component/form.dart';
 import 'package:focus/pkg/component/process.dart';
 import 'package:focus/pkg/db_types/db.dart';
@@ -142,65 +143,74 @@ class _PlanState extends State<Plan> {
                                   children: p == null
                                       ? [const Text("错误了")]
                                       : [
-                                          Text(p.pt.desc!),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: () {
-                                              var oldWeek = p.pw
-                                                  .where((e) =>
-                                                      diffDay(DateTime.now(),
-                                                          e.end) <=
-                                                      7)
-                                                  .toList();
-                                              return oldWeek.getRange(
-                                                  oldWeek.length >= 3
-                                                      ? oldWeek.length - 3
-                                                      : 0,
-                                                  oldWeek.length);
-                                            }()
-                                                .map((pw) => Container(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              4),
-                                                      child: Column(
-                                                        children: [
-                                                          Container(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(2),
-                                                            decoration: BoxDecoration(
-                                                                color: pw.week ==
-                                                                        p.pt
-                                                                            .currentWeek
-                                                                    ? Colors.red
-                                                                    : Colors
-                                                                        .orange
-                                                                        .shade600,
-                                                                borderRadius: BorderRadius
-                                                                    .all(Radius
-                                                                        .circular(
-                                                                            6))),
-                                                            child: Text(
-                                                              "第${pw.week}周",
-                                                              style: const TextStyle(
-                                                                  color: Colors
-                                                                      .white),
-                                                            ),
+                                          IfTrue(
+                                              p.pt.desc! != "",
+                                              Text(
+                                                p.pt.desc!,
+                                                softWrap: true,
+                                              )),
+                                          IfTrue(
+                                              !p.pt.finish,
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: () {
+                                                  var oldWeek = p.pw
+                                                      .where((e) =>
+                                                          diffDay(
+                                                              DateTime.now(),
+                                                              e.end) <=
+                                                          7)
+                                                      .toList();
+                                                  return oldWeek.getRange(
+                                                      oldWeek.length >= 3
+                                                          ? oldWeek.length - 3
+                                                          : 0,
+                                                      oldWeek.length);
+                                                }()
+                                                    .map((pw) => Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(4),
+                                                          child: Column(
+                                                            children: [
+                                                              Container(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .all(2),
+                                                                decoration: BoxDecoration(
+                                                                    color: pw.week ==
+                                                                            p.pt
+                                                                                .currentWeek
+                                                                        ? Colors
+                                                                            .red
+                                                                        : Colors
+                                                                            .orange
+                                                                            .shade600,
+                                                                    borderRadius:
+                                                                        BorderRadius.all(
+                                                                            Radius.circular(6))),
+                                                                child: Text(
+                                                                  "第${pw.week}周",
+                                                                  style: const TextStyle(
+                                                                      color: Colors
+                                                                          .white),
+                                                                ),
+                                                              ),
+                                                              Text(
+                                                                  "${pw.joint}/${pw.jointCount == pw.jointCount.truncate().toDouble() ? pw.jointCount.truncate() : pw.jointCount.toStringAsFixed(1)}"),
+                                                              pw.week ==
+                                                                      p.pt
+                                                                          .currentWeek
+                                                                  ? Text(
+                                                                      "剩${diffDay(DateTime.now(), pw.end)}天")
+                                                                  : Container()
+                                                            ],
                                                           ),
-                                                          Text(
-                                                              "${pw.joint}/${pw.jointCount == pw.jointCount.truncate().toDouble() ? pw.jointCount.truncate() : pw.jointCount.toStringAsFixed(1)}"),
-                                                          pw.week ==
-                                                                  p.pt
-                                                                      .currentWeek
-                                                              ? Text(
-                                                                  "剩${diffDay(DateTime.now(), pw.end)}天")
-                                                              : Container()
-                                                        ],
-                                                      ),
-                                                    ))
-                                                .toList(),
-                                          ),
+                                                        ))
+                                                    .toList(),
+                                              )),
                                           Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
@@ -215,23 +225,29 @@ class _PlanState extends State<Plan> {
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text("${p.pt.goesDay}天"),
-                                              Expanded(
-                                                flex: 1,
-                                                child: Center(
-                                                  child: Text(
-                                                      "共${p.pt.dayNum}天, ${diffWeek(p.pt.createdAt!, p.pt.deadLine!)}周"),
-                                                ),
-                                              ),
-                                              Text("${p.pt.hasDay}天")
+                                              Text(
+                                                  "${p.pt.finish ? "已" : ""}${p.pt.goesDay}天"),
+                                              IfTrue(
+                                                  !p.pt.finish,
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: Center(
+                                                      child: Text(
+                                                          "共${p.pt.dayNum}天, ${diffWeek(p.pt.createdAt!, p.pt.deadLine!)}周"),
+                                                    ),
+                                                  )),
+                                              IfTrue(!p.pt.finish,
+                                                  Text("${p.pt.hasDay}天"))
                                             ],
                                           ),
-                                          Container(
-                                              child: Process(
-                                                p.pt.goesDay / p.pt.dayNum,
-                                                color: Colors.deepOrange,
-                                              ),
-                                              height: 10),
+                                          IfTrue(
+                                              !p.pt.finish,
+                                              SizedBox(
+                                                  height: 10,
+                                                  child: Process(
+                                                    p.pt.goesDay / p.pt.dayNum,
+                                                    color: Colors.deepOrange,
+                                                  ))),
                                         ],
                                 ),
                               )
@@ -240,6 +256,9 @@ class _PlanState extends State<Plan> {
                         },
                         actions: [
                           ItemAction<PlanInfo>(
+                              filter: (PlanInfo? p) {
+                                return p != null && !p.pt.finish;
+                              },
                               cb: (PlanInfo? p, Function() refresh) async {
                                 DBClientSet appDB =
                                     await Application.instance!.make("app_db");
@@ -252,7 +271,11 @@ class _PlanState extends State<Plan> {
                                 var fu = FormUtil(
                                     title: "记录",
                                     fis: [
-                                      FormItem(field: "countMode", title: "总计模式", type: FormItemType.switchType, defaultValue: true),
+                                      FormItem(
+                                          field: "countMode",
+                                          title: "总计模式",
+                                          type: FormItemType.switchType,
+                                          defaultValue: true),
                                       FormItem(
                                           field: PlanDetailClient.hitField,
                                           title: "增加",
@@ -263,13 +286,17 @@ class _PlanState extends State<Plan> {
                                               value as int > 0),
                                       FormItem(
                                           field: PlanDetailClient.descField,
-                                          title: "描述")
+                                          title: "描述",
+                                          option: {"maxLine": 10})
                                     ],
                                     save:
                                         (BuildContext context, FormData data) {
                                       // 以当前数减去历史计算 差
                                       if (data.data["countMode"] as bool) {
-                                        data.data[PlanDetailClient.hitField] = (data.data[PlanDetailClient.hitField] as int) - p!.pt.joint!;
+                                        data.data[PlanDetailClient.hitField] =
+                                            (data.data[PlanDetailClient
+                                                    .hitField] as int) -
+                                                p!.pt.joint!;
                                       }
                                       pdt.fill(data.data);
                                       Navigator.pop(context);
