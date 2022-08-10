@@ -12,6 +12,8 @@ class appConfig {
       "db_enable": true,
       "db_schema": DBClientSet.schema,
       "db_migrate": [
+        HabitClient.schema,
+        HabitRecordClient.schema,
       ],
     }, inDev: true);
   }

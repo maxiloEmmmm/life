@@ -119,6 +119,8 @@ class _PlanState extends State<Plan> {
                             return;
                           }
                           await appDB.Plan().delete(p.pt.id!);
+                          (await p.pt.queryPlanDetails())
+                              .forEach((e) => appDB.PlanDetail().delete(e.id!));
                           fetch();
                         },
                         onUpdate: (PlanInfo p, Function() refresh) async {

@@ -3,6 +3,8 @@ import "package:maxilozoz_box/modules/storage/sqlite/sqlite.dart";
 import 'package:maxilozoz_box/modules/storage/sqlite/build/annotation.dart';
 part 'db.db.g.dart';
 part 'plan.dart';
+part 'habit.dart';
+
 @DBSchema(
   fields: [
     DBMetaField(name: "identity"),
@@ -45,3 +47,16 @@ class PlanDetail {}
   ],
 )
 class Thing {}
+
+@DBSchema(
+  fields: [
+    DBMetaField(
+        name: "createdAt",
+        type: DBFieldType.DateTime,
+        defaultDefine: "DateTime.now()"),
+  ],
+  edges: [
+    DBMetaEdge(table: "Habit", type: DBEdgeType.From, unique: true),
+  ],
+)
+class HabitRecord {}

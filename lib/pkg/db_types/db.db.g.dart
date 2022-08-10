@@ -23,8 +23,16 @@ class DBClientSet {
     return ThingClient(this);
   }
 
+  HabitRecordClient HabitRecord() {
+    return HabitRecordClient(this);
+  }
+
   PlanClient Plan() {
     return PlanClient(this);
+  }
+
+  HabitClient Habit() {
+    return HabitClient(this);
   }
 
   DatabaseExec db;
@@ -33,7 +41,9 @@ ${NgrokClient.schema}
 ${AwardClient.schema}
 ${PlanDetailClient.schema}
 ${ThingClient.schema}
+${HabitRecordClient.schema}
 ${PlanClient.schema}
+${HabitClient.schema}
 ''';
   DBClientSet(this.db);
 
@@ -866,6 +876,194 @@ class ThingType {
   }
 }
 
+class HabitRecordClient {
+  DBClientSet clientSet;
+  HabitRecordClient(this.clientSet);
+
+  Future<int> delete(int id) async {
+    return await clientSet.db
+        .rawDelete("delete from $table where id = ?", [id]);
+  }
+
+  Future<HabitRecordType?> first(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
+    if (rows.isEmpty) {
+      return null;
+    }
+
+    return rows[0];
+  }
+
+  Future<HabitRecordType> firstOrNew(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
+    if (rows.isEmpty) {
+      var item = HabitRecordType();
+      if (idx > 0) {
+        item.id = idx;
+      }
+      return wrapType(item);
+    }
+
+    return rows[0];
+  }
+
+  HabitRecordType wrapType(HabitRecordType typ) {
+    typ.clientSet = clientSet;
+    return typ;
+  }
+
+  Future<List<HabitRecordType>> all() async {
+    return await query().query();
+  }
+
+  QueryBuild<HabitRecordType> query() {
+    var qb = QueryBuild<HabitRecordType>()..table(Table.from(table));
+    qb.queryFunc = (String q) async {
+      return (await clientSet.db.rawQuery(q))
+          .map((e) => newTypeByRow(e))
+          .toList();
+    };
+    return qb;
+  }
+
+  Future<int> insert(HabitRecordType obj) async {
+    return await clientSet.db.insert(table, obj.toDB());
+  }
+
+  Future<int> update(HabitRecordType obj) async {
+    return await clientSet.db
+        .update(table, obj.toDB(), where: "id = ?", whereArgs: [obj.id!]);
+  }
+
+  HabitRecordType newType() {
+    return wrapType(HabitRecordType());
+  }
+
+  HabitRecordType newTypeByRow(Map row) {
+    return wrapType(HabitRecordType.DB(row));
+  }
+
+  static const idField = "id";
+  static const createdAtField = "createdAt";
+  static const Habit_refField = "Habit_ref";
+  static const table = "HabitRecord";
+  static const schema = '''
+create table if not exists HabitRecord (
+  id INTEGER PRIMARY KEY AUTOINCREMENT ,
+createdAt text   ,
+Habit_ref INTEGER   
+);
+
+''';
+}
+
+class HabitRecordType {
+  late DBClientSet clientSet;
+
+  int? id;
+  DateTime? createdAt;
+  int? Habit_ref;
+
+  HabitRecordType({this.id, this.createdAt, this.Habit_ref});
+
+  HabitRecordType fill(Map data) {
+    if (data["id"] != null) {
+      id = data["id"] as int;
+    }
+
+    if (data["createdAt"] != null) {
+      createdAt = data["createdAt"] as DateTime;
+    }
+
+    if (data["Habit_ref"] != null) {
+      Habit_ref = data["Habit_ref"] as int;
+    }
+
+    return this;
+  }
+
+  HabitRecordType fillByType(HabitRecordType obj) {
+    if (obj.id != null) {
+      id = obj.id;
+    }
+
+    if (obj.createdAt != null) {
+      createdAt = obj.createdAt;
+    }
+
+    if (obj.Habit_ref != null) {
+      Habit_ref = obj.Habit_ref;
+    }
+
+    return this;
+  }
+
+  HabitRecordType.DB(Map data) {
+    id = data["id"] as int?;
+    createdAt = data["createdAt"] == null
+        ? null
+        : string2DateTime(data["createdAt"] as String);
+    Habit_ref = data["Habit_ref"] as int?;
+  }
+
+  Map<String, Object?> toDB() {
+    final val = <String, Object?>{};
+
+    void writeNotNull(String key, dynamic value) {
+      if (value != null) {
+        val[key] = value;
+      }
+    }
+
+    writeNotNull('id', id);
+    writeNotNull(
+        'createdAt', createdAt == null ? null : dateTime2String(createdAt!));
+    writeNotNull('Habit_ref', Habit_ref);
+
+    return val;
+  }
+
+  Future<HabitRecordType> save() async {
+    if (id == null) {
+      createdAt ??= DateTime.now();
+
+      id = await clientSet.HabitRecord().insert(this);
+    } else {
+      await clientSet.HabitRecord().update(this);
+    }
+
+    return (await clientSet.HabitRecord().first(id!))!;
+  }
+
+  Future<int> destory() async {
+    if (id == null) {
+      throw "current type not allow this opeart";
+    }
+
+    return await clientSet.HabitRecord().delete(id!);
+  }
+
+  Future<HabitType?> queryHabit() async {
+    var rows = await clientSet.Habit()
+        .query()
+        .where(Eq("id", Habit_ref))
+        .limit(1)
+        .query();
+
+    if (rows.isEmpty) {
+      return null;
+    }
+    return rows[0];
+  }
+
+  HabitRecordType setHabit(int idx) {
+    Habit_ref = idx;
+    return this;
+  }
+}
+
 class PlanClient {
   DBClientSet clientSet;
   PlanClient(this.clientSet);
@@ -1150,6 +1348,252 @@ class PlanType {
   Future<List<PlanDetailType>> queryPlanDetails() async {
     var rows =
         await clientSet.PlanDetail().query().where(Eq("Plan_ref", id)).query();
+
+    return rows;
+  }
+}
+
+class HabitClient {
+  DBClientSet clientSet;
+  HabitClient(this.clientSet);
+
+  Future<int> delete(int id) async {
+    return await clientSet.db
+        .rawDelete("delete from $table where id = ?", [id]);
+  }
+
+  Future<HabitType?> first(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
+    if (rows.isEmpty) {
+      return null;
+    }
+
+    return rows[0];
+  }
+
+  Future<HabitType> firstOrNew(int idx) async {
+    var rows = await query().where(Eq("id", idx)).query();
+
+    if (rows.isEmpty) {
+      var item = HabitType();
+      if (idx > 0) {
+        item.id = idx;
+      }
+      return wrapType(item);
+    }
+
+    return rows[0];
+  }
+
+  HabitType wrapType(HabitType typ) {
+    typ.clientSet = clientSet;
+    return typ;
+  }
+
+  Future<List<HabitType>> all() async {
+    return await query().query();
+  }
+
+  QueryBuild<HabitType> query() {
+    var qb = QueryBuild<HabitType>()..table(Table.from(table));
+    qb.queryFunc = (String q) async {
+      return (await clientSet.db.rawQuery(q))
+          .map((e) => newTypeByRow(e))
+          .toList();
+    };
+    return qb;
+  }
+
+  Future<int> insert(HabitType obj) async {
+    return await clientSet.db.insert(table, obj.toDB());
+  }
+
+  Future<int> update(HabitType obj) async {
+    return await clientSet.db
+        .update(table, obj.toDB(), where: "id = ?", whereArgs: [obj.id!]);
+  }
+
+  HabitType newType() {
+    return wrapType(HabitType());
+  }
+
+  HabitType newTypeByRow(Map row) {
+    return wrapType(HabitType.DB(row));
+  }
+
+  static const idField = "id";
+  static const nameField = "name";
+  static const descField = "desc";
+  static const countField = "count";
+  static const notBeforeField = "notBefore";
+  static const notAfterField = "notAfter";
+  static const createdAtField = "createdAt";
+  static const table = "Habit";
+  static const schema = '''
+create table if not exists Habit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT ,
+name text   ,
+desc text   ,
+count INTEGER   ,
+notBefore text   ,
+notAfter text   ,
+createdAt text   
+);
+
+''';
+}
+
+class HabitType {
+  late DBClientSet clientSet;
+
+  int? id;
+  String? name;
+  String? desc;
+  int? count;
+  DateTime? notBefore;
+  DateTime? notAfter;
+  DateTime? createdAt;
+
+  HabitType(
+      {this.id,
+      this.name,
+      this.desc,
+      this.count,
+      this.notBefore,
+      this.notAfter,
+      this.createdAt});
+
+  HabitType fill(Map data) {
+    if (data["id"] != null) {
+      id = data["id"] as int;
+    }
+
+    if (data["name"] != null) {
+      name = data["name"] as String;
+    }
+
+    if (data["desc"] != null) {
+      desc = data["desc"] as String;
+    }
+
+    if (data["count"] != null) {
+      count = data["count"] as int;
+    }
+
+    if (data["notBefore"] != null) {
+      notBefore = data["notBefore"] as DateTime;
+    }
+
+    if (data["notAfter"] != null) {
+      notAfter = data["notAfter"] as DateTime;
+    }
+
+    if (data["createdAt"] != null) {
+      createdAt = data["createdAt"] as DateTime;
+    }
+
+    return this;
+  }
+
+  HabitType fillByType(HabitType obj) {
+    if (obj.id != null) {
+      id = obj.id;
+    }
+
+    if (obj.name != null) {
+      name = obj.name;
+    }
+
+    if (obj.desc != null) {
+      desc = obj.desc;
+    }
+
+    if (obj.count != null) {
+      count = obj.count;
+    }
+
+    if (obj.notBefore != null) {
+      notBefore = obj.notBefore;
+    }
+
+    if (obj.notAfter != null) {
+      notAfter = obj.notAfter;
+    }
+
+    if (obj.createdAt != null) {
+      createdAt = obj.createdAt;
+    }
+
+    return this;
+  }
+
+  HabitType.DB(Map data) {
+    id = data["id"] as int?;
+    name = data["name"] as String?;
+    desc = data["desc"] as String?;
+    count = data["count"] as int?;
+    notBefore = data["notBefore"] == null
+        ? null
+        : string2DateTime(data["notBefore"] as String);
+    notAfter = data["notAfter"] == null
+        ? null
+        : string2DateTime(data["notAfter"] as String);
+    createdAt = data["createdAt"] == null
+        ? null
+        : string2DateTime(data["createdAt"] as String);
+  }
+
+  Map<String, Object?> toDB() {
+    final val = <String, Object?>{};
+
+    void writeNotNull(String key, dynamic value) {
+      if (value != null) {
+        val[key] = value;
+      }
+    }
+
+    writeNotNull('id', id);
+    writeNotNull('name', name);
+    writeNotNull('desc', desc);
+    writeNotNull('count', count);
+    writeNotNull(
+        'notBefore', notBefore == null ? null : dateTime2String(notBefore!));
+    writeNotNull(
+        'notAfter', notAfter == null ? null : dateTime2String(notAfter!));
+    writeNotNull(
+        'createdAt', createdAt == null ? null : dateTime2String(createdAt!));
+
+    return val;
+  }
+
+  Future<HabitType> save() async {
+    if (id == null) {
+      count ??= 1;
+
+      createdAt ??= DateTime.now();
+
+      id = await clientSet.Habit().insert(this);
+    } else {
+      await clientSet.Habit().update(this);
+    }
+
+    return (await clientSet.Habit().first(id!))!;
+  }
+
+  Future<int> destory() async {
+    if (id == null) {
+      throw "current type not allow this opeart";
+    }
+
+    return await clientSet.Habit().delete(id!);
+  }
+
+  Future<List<HabitRecordType>> queryHabitRecords() async {
+    var rows = await clientSet.HabitRecord()
+        .query()
+        .where(Eq("Habit_ref", id))
+        .query();
 
     return rows;
   }

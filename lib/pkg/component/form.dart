@@ -11,6 +11,7 @@ enum FormItemType {
   switchType,
   sliderType,
   datetimeType,
+  timepickType,
   checkboxType,
   radioType
 }
@@ -124,6 +125,13 @@ class FormUtil {
           }
           valueSet[element.field] = value;
           break;
+        case FormItemType.timepickType:
+          var value = DateTime.now();
+          if (element.defaultValue is DateTime) {
+            value = element.defaultValue as DateTime;
+          }
+          valueSet[element.field] = value;
+          break;
       }
 
       onChange(field: element.field);
@@ -167,6 +175,7 @@ class FormUtil {
       case FormItemType.sliderType:
       case FormItemType.switchType:
       case FormItemType.datetimeType:
+      case FormItemType.timepickType:
         return valueSet[item.field];
       default:
         return null;
@@ -198,6 +207,7 @@ class FormUtil {
           case FormItemType.sliderType:
           case FormItemType.switchType:
           case FormItemType.datetimeType:
+          case FormItemType.timepickType:
             valueSet[key] = value;
         }
         onChange(field: key);
@@ -390,6 +400,7 @@ class FormUtil {
           ),
         );
       case FormItemType.datetimeType:
+      case FormItemType.timepickType:
         return Container(
           height: 56,
           decoration: BoxDecoration(
@@ -411,7 +422,9 @@ class FormUtil {
                                     context,
                                     CupertinoDatePicker(
                                       initialDateTime: valueSet[fi.field],
-                                      mode: CupertinoDatePickerMode.date,
+                                      mode: fi.type == FormItemType.timepickType
+                                          ? CupertinoDatePickerMode.time
+                                          : CupertinoDatePickerMode.date,
                                       use24hFormat: true,
                                       // This is called when the user changes the date.
                                       onDateTimeChanged: (DateTime value) {
@@ -423,7 +436,9 @@ class FormUtil {
                               // In this example, the date value is formatted manually. You can use intl package
                               // to format the value based on user's locale settings.
                               child: Text(
-                                '${valueSet[fi.field].month}-${valueSet[fi.field].day}-${valueSet[fi.field].year}',
+                                fi.type == FormItemType.timepickType
+                                    ? '${valueSet[fi.field].hour}点${valueSet[fi.field].minute}分'
+                                    : '${valueSet[fi.field].month}-${valueSet[fi.field].day}-${valueSet[fi.field].year}',
                               )))
                     ],
                   )),
