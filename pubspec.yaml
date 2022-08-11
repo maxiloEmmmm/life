@@ -37,6 +37,7 @@ dependencies:
   sprintf: "^6.0.0"
   json_annotation: ^4.4.0
   flutter_slidable:
+  flutter_local_notifications:
 
   maxilozoz_box: 
     path: d:/code/maxilozoz_box
