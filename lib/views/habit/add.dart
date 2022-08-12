@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/component/form.dart';
 import 'package:focus/pkg/db_types/db.dart';
+import 'package:focus/pkg/util/date.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 
@@ -29,11 +30,11 @@ class _AddState extends State<Add> {
           FormItem(
               field: HabitClient.notBeforeField,
               title: "不早于",
-              type: FormItemType.timepickType),
+              type: FormItemType.timepickType, defaultValue: DateTime.parse("2011-01-01 09:00:00")),
           FormItem(
               field: HabitClient.notAfterField,
               title: "不晚于",
-              type: FormItemType.timepickType),
+              type: FormItemType.timepickType, defaultValue: DateTime.parse("2011-01-01 18:00:00")),
           FormItem(
               field: HabitClient.countField,
               title: "共计",

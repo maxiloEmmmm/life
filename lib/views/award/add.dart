@@ -4,7 +4,6 @@ import 'package:focus/pkg/component/form.dart';
 import 'package:focus/pkg/db_types/db.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
-
 class Add extends StatefulWidget {
   int identity = 0;
   Add(this.identity);

@@ -1,5 +1,7 @@
 import 'package:focus/pkg/provider/config.dart';
 import 'package:focus/pkg/provider/db_provider.dart';
+import 'package:focus/pkg/provider/habit_notify.dart';
+import 'package:focus/pkg/provider/notify.dart';
 import 'package:focus/views/award/award.dart';
 import 'package:focus/views/habit/habit.dart';
 import 'package:focus/views/index.dart';
@@ -43,5 +45,7 @@ void main() {
       '/award/update/:id', (Map data) => award_add.Add(int.parse(data["id"])));
   app.serviceProvider.register(appConfig());
   app.serviceProvider.register(AppDBProvider());
+  app.serviceProvider.register(appNotify());
+  app.serviceProvider.register(habitNotify());
   app.run();
 }

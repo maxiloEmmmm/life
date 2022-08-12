@@ -9,3 +9,9 @@ int diffDay(DateTime start, end) {
 int diffWeek(DateTime start, end) {
   return ((diffDay(start, end) + 1) / 7).ceil();
 }
+
+int diffMinute(DateTime start, end) {
+  var s = start.minute + start.hour*60;
+  var e = end.minute + end.hour*60;
+  return e - s;
+}

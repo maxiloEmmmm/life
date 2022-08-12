@@ -1,15 +1,18 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:focus/pkg/db_types/db.dart';
 import 'package:focus/pkg/provider/notify.dart';
+import 'package:focus/pkg/util/date.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/config/config.dart';
 
 class habitNotifyRecord {
   late HabitType t;
   int count = 0;
-  DateTime last = DateTime.now().add(Duration(days: 1));
+  DateTime last = DateTime.now().add(Duration(days: -1));
 }
 
 class habitNotify {
@@ -39,11 +42,11 @@ class habitNotify {
 
       var now = DateTime.now();
       old.forEach((key, value) {
-        if (value.t.notBefore!.compareTo(now) <= 0) {
+        if (diffMinute(value.t.notBefore!, now) <= 0) {
           return;
         }
 
-        if (value.t.notAfter!.compareTo(now) >= 0) {
+        if (diffMinute(now, value.t.notAfter!) <= 0) {
           return;
         }
 
@@ -52,8 +55,13 @@ class habitNotify {
           if (value.last.add(Duration(seconds: per)).compareTo(now) <= 0) {
             value.last = now;
             value.count++;
-            flnp.show(
+            if (app.lifecycleState == AppLifecycleState.resumed) {
+              // todo: app iner notify
+              print(value.t.name);
+            }else {
+              flnp.show(
                 now.second + value.t.id!, value.t.name, value.t.desc, null);
+            }
           }
         }
       });
