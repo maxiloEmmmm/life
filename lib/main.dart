@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:focus/pkg/provider/background.dart';
 import 'package:focus/pkg/provider/config.dart';
 import 'package:focus/pkg/provider/db_provider.dart';
-import 'package:focus/pkg/provider/habit_notify.dart';
 import 'package:focus/pkg/provider/notify.dart';
 import 'package:focus/views/award/award.dart';
 import 'package:focus/views/habit/habit.dart';
@@ -18,7 +20,6 @@ import 'package:maxilozoz_box/modules/route/route.dart';
 import 'views/ngrok/ngrok.dart';
 
 final Application app = Application();
-
 void main() {
   MinRoute route = app.make('route');
   route.add('/', () => Index());
@@ -46,6 +47,6 @@ void main() {
   app.serviceProvider.register(appConfig());
   app.serviceProvider.register(AppDBProvider());
   app.serviceProvider.register(appNotify());
-  app.serviceProvider.register(habitNotify());
+  app.serviceProvider.register(appBgService());
   app.run();
 }
