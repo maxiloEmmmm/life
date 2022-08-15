@@ -8,6 +8,7 @@ import 'package:focus/pkg/provider/notify.dart';
 import 'package:focus/pkg/util/date.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/config/config.dart';
+import 'package:maxilozoz_box/modules/route/route.dart';
 
 class habitNotifyRecord {
   late HabitType t;
@@ -17,14 +18,19 @@ class habitNotifyRecord {
 
 class habitNotify {
   final name = "habitNotify";
-  void register(Application app) {}
+  Map<int, habitNotifyRecord> old = {};
+
+  void register(Application app) {
+    app.bind("habitNotifyRecord", (Application app, dynamic params) {
+      return old;
+    });
+  }
 
   void boot(Application app) async {
     DBClientSet db = await app.make("app_db");
     FlutterLocalNotificationsPlugin flnp = await app.make("appNotify");
-    Map<int, habitNotifyRecord> old = {};
     Set<int> moreId = Set();
-    Timer.periodic(const Duration(seconds: 5), (timer) async {
+    Timer.periodic(const Duration(seconds: 30), (timer) async {
       List<HabitType> hs = await db.Habit().all();
       hs.forEach((element) {
         moreId.add(element.id!);
@@ -41,6 +47,7 @@ class habitNotify {
       });
 
       var now = DateTime.now();
+      List<Widget> tipW = [];
       old.forEach((key, value) {
         if (diffMinute(value.t.notBefore!, now) <= 0) {
           return;
@@ -51,13 +58,19 @@ class habitNotify {
         }
 
         if (value.count < value.t.count!) {
-          var per = value.t.notAfter!.difference(value.t.notBefore!).inMinutes;
-          if (value.last.add(Duration(seconds: per)).compareTo(now) <= 0) {
+          var per = value.t.notAfter!.difference(value.t.notBefore!).inMinutes / value.t.count!;
+          if (value.last.add(Duration(seconds: per.ceil())).compareTo(now) <= 0) {
             value.last = now;
             value.count++;
             if (app.lifecycleState == AppLifecycleState.resumed) {
-              // todo: app iner notify
-              print(value.t.name);
+              tipW.add(Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(value.t.name!, style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.normal , decoration: TextDecoration.none)),
+                  Text(value.t.desc!, softWrap: true, style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.normal , decoration: TextDecoration.none)),
+                ],
+              ));
             }else {
               flnp.show(
                 now.second + value.t.id!, value.t.name, value.t.desc, null);
@@ -65,6 +78,30 @@ class habitNotify {
           }
         }
       });
+
+      if(tipW.isNotEmpty) {
+        Timer(Duration(seconds: 3), () {
+                Navigator.pop(MinRoute.routeContext!);
+              });
+        showCupertinoModalPopup<void>(
+                context: MinRoute.routeContext!,
+                builder: (BuildContext context) => SafeArea(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    padding: const EdgeInsets.all(6.0),
+                    // The Bottom margin is provided to align the popup above the system navigation bar.
+                    margin: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
+                    // Provide a background color for the popup.
+                    color: CupertinoColors.systemBackground.resolveFrom(context),
+                    // Use a SafeArea widget to avoid system overlaps.
+                    child: Column(
+                      children: tipW,
+                    ),
+                  ),
+                ));
+      }
     });
   }
 }

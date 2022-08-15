@@ -6,6 +6,7 @@ import 'package:focus/pkg/component/assert.dart';
 import 'package:focus/pkg/component/form.dart';
 import 'package:focus/pkg/component/process.dart';
 import 'package:focus/pkg/db_types/db.dart';
+import 'package:focus/pkg/provider/habit_notify.dart';
 import 'package:focus/pkg/util/date.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
@@ -21,6 +22,7 @@ class Habit extends StatefulWidget {
 class HabitInfo {
   late HabitType typ;
   late bool todayOk;
+  late int count;
 }
 
 class _HabitState extends State<Habit> {
@@ -103,7 +105,12 @@ class _HabitState extends State<Habit> {
                           DBClientSet appDb =
                               await Application.instance!.make("app_db");
                           var h = (await appDb.Habit().first(e.id!))!;
+                          // todo 加个主动通知刷新页面
+                          var hr = Application.instance!.make("habitNotifyRecord");
                           var hi = HabitInfo();
+                          if(hr != null) {
+                            hi.count = (hr as Map<int, habitNotifyRecord>)[e.id!]?.count ?? 0;
+                          }
                           hi.typ = h;
                           hi.todayOk = (await h.dayHad()) == 1;
                           return hi;
@@ -125,7 +132,7 @@ class _HabitState extends State<Habit> {
                                             children: [
                                               Text(
                                                   "始于${p.typ.createdAt!.year}.${p.typ.createdAt!.month}.${p.typ.createdAt!.day}"),
-                                              IfTrue(true, Text("还剩todo次"))
+                                              IfTrue(true, Text("还剩${p.count}/${p.typ.count!}次"))
                                             ],
                                           ),
                                         ],
