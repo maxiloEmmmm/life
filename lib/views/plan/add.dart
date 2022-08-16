@@ -25,6 +25,10 @@ class _AddState extends State<Add> {
           FormItem(
               field: PlanClient.descField, title: "描述", option: {"maxLine": 5}),
           FormItem(
+              field: PlanClient.createdAtField,
+              title: "开始日期",
+              type: FormItemType.datetimeType, defaultValue: DateTime.now()),
+          FormItem(
               field: PlanClient.deadLineField,
               title: "结束日期",
               type: FormItemType.datetimeType),
@@ -46,11 +50,25 @@ class _AddState extends State<Add> {
 
           DBClientSet appDB = await Application.instance!.make("app_db");
 
+          PlanType p;
           if (widget.identity == 0) {
+            p = appDB.Plan().newType();
             data.data[PlanClient.createdAtField] = DateTime.now();
+          }else {
+            p = (await appDB.Plan().first(widget.identity))!;
+            var modd = (data.data[PlanClient.createdAtField] as DateTime);
+            if((await p.queryPlanDetails()).where((element) => element.createdAt!.compareTo(modd) < 0).isNotEmpty) {
+              tip.TextAlertDesc(context, "存在超前的计划日志，创建日期拒绝修改!");
+              return;
+            }
           }
 
-          await (await appDB.Plan().firstOrNew(widget.identity))
+          if((data.data[PlanClient.createdAtField] as DateTime).compareTo((data.data[PlanClient.deadLineField] as DateTime)) >= 0) {
+            tip.TextAlertDesc(context, "开始日期晚于结束日期!");
+            return;
+          }
+
+          await p
               .fill(data.data)
               .save();
 

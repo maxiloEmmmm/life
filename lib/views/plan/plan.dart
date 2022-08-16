@@ -129,7 +129,7 @@ class _PlanState extends State<Plan> {
                               .then((value) => fetch());
                         },
                         fetch: () async {
-                          DBClientSet appDB =
+                            DBClientSet appDB =
                               await Application.instance!.make("app_db");
                           PlanInfo pi = PlanInfo();
                           pi.pt = (await appDB.Plan().first(e.id!))!;
@@ -201,7 +201,7 @@ class _PlanState extends State<Plan> {
                                                                 ),
                                                               ),
                                                               Text(
-                                                                  "${pw.joint}/${pw.jointCount == pw.jointCount.truncate().toDouble() ? pw.jointCount.truncate() : pw.jointCount.toStringAsFixed(1)}"),
+                                                                  "${pw.joint}/${pw.jointCount == pw.jointCount.truncate().toDouble() ? pw.jointCount.truncate() : pw.jointCount.toStringAsFixed(1)}${pw.weekCompensate != 0 ? "(${pw.weekCompensate < 0 ? "-" : "+"}${pw.weekCompensate == pw.weekCompensate.truncate().toDouble() ? pw.weekCompensate.truncate() : pw.weekCompensate.toStringAsFixed(1)})" : ""}"),
                                                               pw.week ==
                                                                       p.pt
                                                                           .currentWeek
@@ -219,11 +219,11 @@ class _PlanState extends State<Plan> {
                                             children: [
                                               Text(
                                                   "${p.pt.createdAt!.year}.${p.pt.createdAt!.month}.${p.pt.createdAt!.day} ~ ${p.pt.deadLine!.year}.${p.pt.deadLine!.month}.${p.pt.deadLine!.day}"),
-                                              Text(
+                                              p.pt.willStart ? Text("${-p.pt.goesDay}天后开始") : Text(
                                                   "joint: ${p.pt.joint ?? 0}/${p.pt.jointCount ?? 0}"),
                                             ],
                                           ),
-                                          Row(
+                                          IfFalse(p.pt.willStart, Row(
                                             mainAxisAlignment:
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
@@ -241,9 +241,9 @@ class _PlanState extends State<Plan> {
                                               IfTrue(!p.pt.finish,
                                                   Text("${p.pt.hasDay}天"))
                                             ],
-                                          ),
+                                          )),
                                           IfTrue(
-                                              !p.pt.finish,
+                                              !p.pt.finish && !p.pt.willStart,
                                               SizedBox(
                                                   height: 10,
                                                   child: Process(
