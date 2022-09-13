@@ -23,6 +23,7 @@ class PlanWeek {
   late DateTime end;
   late int week;
   late int joint;
+  late double weekCompensate;
 }
 
 extension PlanTypeHelp on PlanType {
@@ -42,6 +43,10 @@ extension PlanTypeHelp on PlanType {
     return diffDay(createdAt!, DateTime.now());
   }
 
+  bool get willStart {
+    return goesDay < 0;
+  }
+
   int get hasDay {
     return diffDay(DateTime.now(), deadLine!);
   }
@@ -55,14 +60,36 @@ extension PlanTypeHelp on PlanType {
     int cur = 1;
     int wn = weekNum;
     double eachWeekJoint = jointCount! / wn;
+    var jc = joint ?? 0;
     while(cur <= wn) {
       PlanWeek pw = PlanWeek();
       pw.week = cur;
       pw.start = createdAt!.add(Duration(days: (cur-1)*7));
       pw.end = createdAt!.add(Duration(days: cur*7));
 
+      var eu = eachWeekJoint * cur;
+      pw.jointCount = eu > jointCount! ? eu - jointCount! : eachWeekJoint;
+      pw.weekCompensate = 0;
       
-      pw.jointCount = eachWeekJoint > jointCount! ? eachWeekJoint - jointCount! : eachWeekJoint;
+      if(cur == currentWeek) {
+        // 这周要多做一点
+        var diffJoint = (eu - jc);
+        if(diffJoint > pw.jointCount) {
+          pw.weekCompensate = diffJoint - pw.jointCount;
+          pw.jointCount += pw.weekCompensate;
+        }
+
+        //  做的太多了这周可少做点
+        var diffPreJoint = jc - (eachWeekJoint * (cur - 1));
+        if(diffPreJoint > 0) {
+          pw.jointCount -= diffPreJoint;
+          if(pw.jointCount < 0) {
+            pw.jointCount = 0;
+          }
+          pw.weekCompensate = -diffPreJoint;
+        }
+      }
+        
       ret.add(pw);
       cur++;
     }

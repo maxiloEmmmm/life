@@ -49,5 +49,11 @@
 	<array>
 		<string>dev.flutter.background.refresh</string>
 	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>dev.flutter.background.refresh</string>
+	</array>
+    <key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

@@ -8,13 +8,15 @@ class appConfig {
 
   void boot(Application app) {
     Config config = app.make("config");
-    config.add({
+    var opt = {
       "db_enable": true,
       "db_schema": DBClientSet.schema,
       "db_migrate": [
         HabitClient.schema,
         HabitRecordClient.schema,
       ],
-    }, inDev: true);
+    };
+    config.add(opt, inDev: true);
+    config.add(opt, inDev: false);
   }
 }
