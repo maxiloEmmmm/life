@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:focus/pkg/component/form.dart';
 import 'package:focus/pkg/db_types/db.dart';
+import 'package:focus/pkg/provider/notify.dart';
 import 'package:focus/pkg/util/date.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
@@ -52,12 +54,13 @@ class _AddState extends State<Add> {
 
           DBClientSet appDB = await Application.instance!.make("app_db");
 
+          FlutterLocalNotificationsPlugin fn = await Application.instance!.make("appNotify");
           HabitType ht = appDB.Habit().newType();
           if (widget.identity != 0) {
             ht = (await appDB.Habit().first(widget.identity))!;
           }
 
-          await (await appDB.Habit().firstOrNew(widget.identity))
+          ht = await (await appDB.Habit().firstOrNew(widget.identity))
               .fill(data.data)
               .save();
 

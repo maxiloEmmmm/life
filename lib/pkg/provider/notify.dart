@@ -13,7 +13,12 @@ class appNotify {
       const AndroidInitializationSettings initializationSettingsAndroid =
           AndroidInitializationSettings('app_icon');
       final IOSInitializationSettings initializationSettingsIOS =
-          IOSInitializationSettings();
+          IOSInitializationSettings(
+            requestAlertPermission: true,
+            requestBadgePermission: true,
+            requestSoundPermission: true,
+            onDidReceiveLocalNotification: (int id, String? title, String? body, String? payload) async {},
+          );
       final MacOSInitializationSettings initializationSettingsMacOS =
           MacOSInitializationSettings();
       final InitializationSettings initializationSettings =

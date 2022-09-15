@@ -215,28 +215,28 @@ packages:
       name: flutter_background_service
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.1.3"
+    version: "2.2.0"
   flutter_background_service_android:
     dependency: transitive
     description:
       name: flutter_background_service_android
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.3"
+    version: "2.3.1"
   flutter_background_service_ios:
     dependency: transitive
     description:
       name: flutter_background_service_ios
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.1.0"
+    version: "2.2.3"
   flutter_background_service_platform_interface:
     dependency: transitive
     description:
       name: flutter_background_service_platform_interface
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.0"
+    version: "2.1.3"
   flutter_lints:
     dependency: "direct dev"
     description:

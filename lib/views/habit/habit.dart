@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/component/assert.dart';
 import 'package:focus/pkg/db_types/db.dart';
-import 'package:focus/pkg/provider/background.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:focus/pkg/component/item.dart';
@@ -105,9 +104,8 @@ class _HabitState extends State<Habit> {
                           // todo 加个主动通知刷新页面
                           var hr = Application.instance!.make("habitNotifyRecord");
                           var hi = HabitInfo();
-                          if(hr != null) {
-                            hi.count = (hr as Map<int, habitNotifyRecord>)[e.id!]?.count ?? 0;
-                          }
+                          // 计算count
+                          hi.count = 0;
                           hi.typ = h;
                           hi.todayOk = (await h.dayHad()) == 1;
                           return hi;
