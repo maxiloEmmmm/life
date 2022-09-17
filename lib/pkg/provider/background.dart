@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:focus/pkg/db_types/db.dart';
+import 'package:focus/pkg/provider/habitMgr.dart';
 import 'package:focus/pkg/util/date.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/config/config.dart';
@@ -23,6 +24,10 @@ bool startx(ServiceInstance service) {
   return true;
 }
 
+start(ServiceInstance service) {
+  startx(service);
+}
+
 class appBgService {
   final name = "app_bg_service";
   late FlutterBackgroundService s;
@@ -35,25 +40,25 @@ class appBgService {
   void boot(Application app) async {
     s = FlutterBackgroundService();
     await s.configure(
-        androidConfiguration: AndroidConfiguration(
-          // auto start service
-          autoStart: true,
-          onStart: (ServiceInstance service) {
-            startx(service);
-          },
-          isForegroundMode: false,
+      androidConfiguration: AndroidConfiguration(
+        // auto start service
+        autoStart: true,
+        onStart: start,
+        isForegroundMode: false,
       ),
       iosConfiguration: IosConfiguration(
         // auto start service
         autoStart: true,
-        onForeground: (ServiceInstance service){},
+        onForeground: start,
         // you have to enable background fetch capability on xcode project
         onBackground: startx,
       ),
     );
     s.startService();
-    s.on("refresh").listen((event) {
-      
+    print("bind refresh");
+    s.on("refresh").listen((event) async {
+      habitMgr flp = await app.make("appHabit");
+      flp.updateHabit();
     });
   }
 }

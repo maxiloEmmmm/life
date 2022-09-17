@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:focus/pkg/provider/background.dart';
 import 'package:focus/pkg/provider/config.dart';
 import 'package:focus/pkg/provider/db_provider.dart';
+import 'package:focus/pkg/provider/habitMgr.dart';
 import 'package:focus/pkg/provider/notify.dart';
 import 'package:focus/views/award/award.dart';
 import 'package:focus/views/habit/habit.dart';
@@ -18,9 +18,12 @@ import 'package:focus/views/thing/thing.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/route/route.dart';
 import 'views/ngrok/ngrok.dart';
-
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 final Application app = Application();
 void main() {
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation("Asia/Shanghai"));
   MinRoute route = app.make('route');
   route.add('/', () => Index());
   route.add('/habit', () => const Habit());
@@ -48,5 +51,6 @@ void main() {
   app.serviceProvider.register(AppDBProvider());
   app.serviceProvider.register(appNotify());
   app.serviceProvider.register(appBgService());
+  app.serviceProvider.register(appHabit());
   app.run();
 }

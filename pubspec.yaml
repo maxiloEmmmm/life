@@ -41,7 +41,7 @@ dependencies:
   flutter_background_service: 2.2.0
 
   maxilozoz_box: 
-    path: /Users/maxilozoz/Downloads/code/_TEST/maxilozoz_box
+    path: d:/code/maxilozoz_box
 
 dev_dependencies:
   flutter_test:

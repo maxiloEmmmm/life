@@ -102,10 +102,9 @@ class _HabitState extends State<Habit> {
                               await Application.instance!.make("app_db");
                           var h = (await appDb.Habit().first(e.id!))!;
                           // todo 加个主动通知刷新页面
-                          var hr = Application.instance!.make("habitNotifyRecord");
                           var hi = HabitInfo();
                           // 计算count
-                          hi.count = 0;
+                          hi.count = h.timeRange.current;
                           hi.typ = h;
                           hi.todayOk = (await h.dayHad()) == 1;
                           return hi;
@@ -127,7 +126,10 @@ class _HabitState extends State<Habit> {
                                             children: [
                                               Text(
                                                   "始于${p.typ.createdAt!.year}.${p.typ.createdAt!.month}.${p.typ.createdAt!.day}"),
-                                              IfTrue(true, Text("还剩${p.count}/${p.typ.count!}次"))
+                                              IfTrue(
+                                                  true,
+                                                  Text(
+                                                      "还剩${p.count}/${p.typ.count!}次"))
                                             ],
                                           ),
                                         ],

@@ -18,7 +18,29 @@ part of 'db.dart';
 )
 class Habit {}
 
+class HabitTimeRange {
+  List<tz.TZDateTime> ss = [];
+  int current = 0;
+}
+
 extension HabitTypeHelp on HabitType {
+  HabitTimeRange get timeRange {
+    var dr = notAfter!.difference(notBefore!).inMinutes / (count! + 1);
+    var now = tz.TZDateTime.now(tz.local);
+    int c = count!;
+    var ret = HabitTimeRange();
+    var today = todayTime(notBefore!);
+    for (var i = 1; i <= c; i++) {
+      var tt = today.add(Duration(minutes: dr.toInt() * i));
+      if (diffMinute(now, tt) <= 0) {
+        ret.current++;
+      }
+      ret.ss.add(tz.TZDateTime(
+          tz.local, tt.year, tt.month, tt.day, tt.hour, tt.minute, tt.second));
+    }
+    return ret;
+  }
+
   Future<int> dayHad() async {
     var hrs = await clientSet.HabitRecord()
         .query()

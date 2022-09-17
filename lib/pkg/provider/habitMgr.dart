@@ -1,42 +1,47 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:focus/pkg/db_types/db.dart';
+import 'package:focus/pkg/util/date.dart';
 import 'package:maxilozoz_box/application.dart';
-import 'package:maxilozoz_box/modules/config/config.dart';
-import 'package:maxilozoz_box/modules/storage/sqlite/sqlite.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class habitMgr {
   late Application app;
 
   updateHabit() async {
     DBClientSet db = await app.make("app_db");
-    FlutterLocalNotificationsPlugin flp = await app.make("app_notify");
+    FlutterLocalNotificationsPlugin flp = await app.make("appNotify");
 
     var it = (await db.Habit().all()).iterator;
     while (it.moveNext()) {
-      var dr = it.current.notAfter!.difference(it.current.notBefore!).inSeconds / (it.current.count! + 1);
-      int c = it.current.count!;
-
-      while(c > 0) {
-        flp.zonedSchedule(id, title, body, scheduledDate, notificationDetails, uiLocalNotificationDateInterpretation: uiLocalNotificationDateInterpretation, androidAllowWhileIdle: androidAllowWhileIdle)
+      var tr = it.current.timeRange;
+      int base = it.current.id! * 100;
+      var ts = tr.ss.getRange(tr.current, tr.ss.length).toList();
+      for (var j = 1; j <= ts.length; j++) {
+        int baseIndex = tr.current + j;
+        print(
+            "schedule habit ${it.current.id} times: $baseIndex at: ${ts[j - 1].toIso8601String()}");
+        flp.zonedSchedule(
+            base + baseIndex,
+            "${it.current.name}($baseIndex)",
+            it.current.desc,
+            ts[j - 1],
+            const NotificationDetails(
+                android: AndroidNotificationDetails('life_habit', 'life_habit',
+                    channelDescription: 'your channel description')),
+            androidAllowWhileIdle: true,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime);
       }
-
     }
   }
 
-  cancleHabit() async {
-    DBClientSet db = await app.make("app_db");
-    FlutterLocalNotificationsPlugin flp = await app.make("app_notify");
+  cancleHabit(HabitType ht) async {
+    FlutterLocalNotificationsPlugin flp = await app.make("appNotify");
+    int base = ht.id! * 100;
 
-    // 计算一个
-    var it = (await db.Habit().query().orderBy(HabitClient.idField) all()).iterator;
-    var limitHabit = 1000;
-    while (it.moveNext()) {
-      var dr = it.current.notAfter!.difference(it.current.notBefore!).inSeconds / (it.current.count! + 1);
-      int base = it.current.id! * 100;
-
-
-
-
+    int c = ht.count!;
+    for (var i = 0; i < c; i++) {
+      flp.cancel(base + i);
     }
   }
 }
@@ -51,5 +56,7 @@ class appHabit {
     });
   }
 
-  void boot(Application app) {}
+  void boot(Application app) async {
+    (app.make("appHabit") as habitMgr).updateHabit();
+  }
 }

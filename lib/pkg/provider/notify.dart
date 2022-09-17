@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:focus/pkg/db_types/db.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:maxilozoz_box/modules/config/config.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class appNotify {
   final name = "appNotify";
@@ -14,11 +15,12 @@ class appNotify {
           AndroidInitializationSettings('app_icon');
       final IOSInitializationSettings initializationSettingsIOS =
           IOSInitializationSettings(
-            requestAlertPermission: true,
-            requestBadgePermission: true,
-            requestSoundPermission: true,
-            onDidReceiveLocalNotification: (int id, String? title, String? body, String? payload) async {},
-          );
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+        onDidReceiveLocalNotification:
+            (int id, String? title, String? body, String? payload) async {},
+      );
       final MacOSInitializationSettings initializationSettingsMacOS =
           MacOSInitializationSettings();
       final InitializationSettings initializationSettings =
@@ -31,5 +33,5 @@ class appNotify {
     });
   }
 
-  void boot(Application app) {}
+  void boot(Application app) async {}
 }

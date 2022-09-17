@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:focus/pkg/component/form.dart';
 import 'package:focus/pkg/db_types/db.dart';
+import 'package:focus/pkg/provider/habitMgr.dart';
 import 'package:focus/pkg/provider/notify.dart';
 import 'package:focus/pkg/util/date.dart';
 import 'package:focus/pkg/util/tip.dart';
@@ -32,11 +33,13 @@ class _AddState extends State<Add> {
           FormItem(
               field: HabitClient.notBeforeField,
               title: "不早于",
-              type: FormItemType.timepickType, defaultValue: DateTime.parse("2011-01-01 09:00:00")),
+              type: FormItemType.timepickType,
+              defaultValue: DateTime.parse("2011-01-01 09:00:00")),
           FormItem(
               field: HabitClient.notAfterField,
               title: "不晚于",
-              type: FormItemType.timepickType, defaultValue: DateTime.parse("2011-01-01 18:00:00")),
+              type: FormItemType.timepickType,
+              defaultValue: DateTime.parse("2011-01-01 18:00:00")),
           FormItem(
               field: HabitClient.countField,
               title: "共计",
@@ -54,18 +57,21 @@ class _AddState extends State<Add> {
 
           DBClientSet appDB = await Application.instance!.make("app_db");
 
-          FlutterLocalNotificationsPlugin fn = await Application.instance!.make("appNotify");
           HabitType ht = appDB.Habit().newType();
+          habitMgr flp = await Application.instance!.make("appHabit");
           if (widget.identity != 0) {
             ht = (await appDB.Habit().first(widget.identity))!;
+            flp.cancleHabit(ht);
           }
 
           ht = await (await appDB.Habit().firstOrNew(widget.identity))
               .fill(data.data)
               .save();
 
-          tip.TextAlertDescWithCB(
-              context, "一切都好", () => Navigator.pop(context));
+          tip.TextAlertDescWithCB(context, "一切都好", () {
+            flp.updateHabit();
+            Navigator.pop(context);
+          });
         });
 
     if (widget.identity != 0) {
