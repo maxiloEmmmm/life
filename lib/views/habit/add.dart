@@ -44,7 +44,9 @@ class _AddState extends State<Add> {
               field: HabitClient.countField,
               title: "共计",
               type: FormItemType.intType,
-              defaultValue: "1"),
+              help: "大于0",
+              defaultValue: "1",
+              validate: (val) => (val as int) > 0),
         ],
         change: () {
           setState(() {});
@@ -64,9 +66,14 @@ class _AddState extends State<Add> {
             flp.cancleHabit(ht);
           }
 
-          ht = await (await appDB.Habit().firstOrNew(widget.identity))
-              .fill(data.data)
-              .save();
+          ht = ht.fill(data.data);
+          if (ht.timeRange.stepMinutes <= 5) {
+            tip.TextAlertDesc(context,
+                "提醒间隔(${ht.timeRange.stepMinutes}分钟)小于等于5分钟 请确认次数及开始截止日期");
+            return;
+          }
+
+          await ht.save();
 
           tip.TextAlertDescWithCB(context, "一切都好", () {
             flp.updateHabit();

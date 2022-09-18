@@ -21,6 +21,7 @@ class Habit {}
 class HabitTimeRange {
   List<tz.TZDateTime> ss = [];
   int current = 0;
+  double stepMinutes = 0;
 }
 
 extension HabitTypeHelp on HabitType {
@@ -29,6 +30,7 @@ extension HabitTypeHelp on HabitType {
     var now = tz.TZDateTime.now(tz.local);
     int c = count!;
     var ret = HabitTimeRange();
+    ret.stepMinutes = dr;
     var today = todayTime(notBefore!);
     for (var i = 1; i <= c; i++) {
       var tt = today.add(Duration(minutes: dr.toInt() * i));
