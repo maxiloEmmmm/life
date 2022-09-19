@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:focus/pkg/component/assert.dart';
 import 'package:focus/pkg/db_types/db.dart';
+import 'package:focus/pkg/provider/habitMgr.dart';
 import 'package:focus/pkg/util/tip.dart';
 import 'package:maxilozoz_box/application.dart';
 import 'package:focus/pkg/component/item.dart';
@@ -90,6 +91,8 @@ class _HabitState extends State<Habit> {
                           (await p.typ.queryHabitRecords()).forEach((element) {
                             appDB.HabitRecord().delete(element.id!);
                           });
+                          habitMgr flp = await Application.instance!.make("appHabit");
+                          flp.cancleHabit(p.typ);
                           fetch();
                         },
                         onUpdate: (HabitInfo p, Function() refresh) async {
